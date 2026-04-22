@@ -1688,20 +1688,12 @@
         // Click anywhere to close (and unlock music autoplay)
         document.getElementById('welcome-panel').addEventListener('click', (e) => {
             e.stopPropagation();
-            // 用户交互后，解锁音乐播放
-            if (bgMusic.paused && !musicMuted) {
-                bgMusic.play().catch(() => {});
-            }
             closeWelcomePanel();
         });
 
-        // Esc key to close (and unlock music autoplay)
+        // Esc key to close welcome panel
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && !journeyStarted) {
-                // 用户交互后，解锁音乐播放
-                if (bgMusic.paused && !musicMuted) {
-                    bgMusic.play().catch(() => {});
-                }
                 closeWelcomePanel();
             }
         });
@@ -2035,12 +2027,22 @@
         }
 
         function updateCityPositions() {
+            const currentZoom = projection.scale();
+            const isHighZoom = currentZoom > 380; // High zoom threshold
+
             cityGroups.forEach((grp, i) => {
                 const p = places[i];
+
+                // At high zoom, only show the current city or nearby cities
+                if (isHighZoom && Math.abs(i - currentIdx) > 1) {
+                    grp.style("display", "none");
+                    return;
+                }
+
                 if (isVisible(p.coords)) {
                     const [x, y] = projection(p.coords);
-                    // Also check if the projected point is within the screen bounds
-                    const margin = 100; // margin around screen edge
+                    // Check if the projected point is within screen bounds
+                    const margin = 150; // margin around screen edge
                     const inScreenBounds = x >= -margin && x <= width + margin &&
                                          y >= -margin && y <= height + margin;
 
