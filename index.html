@@ -1,0 +1,2605 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>段义孚 · 一生漂泊的地理学</title>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;600&family=Source+Han+Serif+SC:wght@300;400;500;600;700&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: radial-gradient(ellipse at center, #141822 0%, #0a0c12 70%, #06080c 100%);
+            color: #e8dcc8;
+            font-family: 'Source Han Serif SC', 'EB Garamond', serif;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* UI scale — makes the 100% browser view look like the 125% browser view,
+           keeping the globe at its natural size. Adjust this single number if
+           the overall chrome feels too big/small. */
+        #header,
+        #year-clock,
+        #author-credit,
+        #story-card,
+        #tooltip,
+        #controls,
+        #epoch-ribbon {
+            zoom: 1.25;
+        }
+
+        /* Era-tint: subtle vignette wash, color shifts with the current epoch */
+        #era-tint {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 1;
+            background-color: var(--era-color, transparent);
+            opacity: 0.28;
+            -webkit-mask-image: radial-gradient(ellipse at center, transparent 40%, black 100%);
+            mask-image: radial-gradient(ellipse at center, transparent 40%, black 100%);
+            transition: background-color 1.5s ease;
+        }
+
+        /* ─── Header ───────────────────────────────────────────────────────────── */
+        #header {
+            position: absolute;
+            top: 32px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .header-portrait {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            border: 1px solid #c49a4a;
+            box-shadow: 0 0 24px rgba(196, 154, 74, 0.22);
+            overflow: hidden;
+            flex-shrink: 0;
+            background: radial-gradient(circle at 30% 30%, #2a2518, #0f0c08);
+            position: relative;
+        }
+
+        .header-portrait img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: sepia(0.25) saturate(0.9) contrast(1.05);
+        }
+
+        .header-portrait::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            box-shadow: inset 0 0 16px rgba(196, 154, 74, 0.12);
+            pointer-events: none;
+        }
+
+        .header-text {
+            text-align: left;
+        }
+
+        #header h1 {
+            font-size: 24px;
+            font-weight: 500;
+            letter-spacing: 5px;
+            color: #e8dcc8;
+            font-family: 'Source Han Serif SC', 'Playfair Display', serif;
+            text-shadow: 0 0 30px rgba(232, 220, 200, 0.2);
+        }
+
+        #header p {
+            margin-top: 8px;
+            font-size: 11px;
+            letter-spacing: 4px;
+            color: #8a7a60;
+            font-style: italic;
+            font-family: 'EB Garamond', serif;
+        }
+
+        /* ─── Author credit (bottom-left signature) ─────────────────────────── */
+        #author-credit {
+            position: absolute;
+            bottom: 22px;
+            left: 26px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .author-portrait {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 1px solid rgba(196, 154, 74, 0.4);
+            overflow: hidden;
+            background: radial-gradient(circle at 30% 30%, #2a2518, #0f0c08);
+            flex-shrink: 0;
+            box-shadow: 0 0 12px rgba(196, 154, 74, 0.12);
+            position: relative;
+        }
+
+        .author-portrait img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: sepia(0.1) saturate(0.95);
+        }
+
+        .author-text {
+            line-height: 1.4;
+        }
+
+        .author-label {
+            font-family: 'EB Garamond', serif;
+            font-size: 9px;
+            letter-spacing: 3px;
+            color: #8a6a2a;
+            font-style: italic;
+            margin-bottom: 3px;
+        }
+
+        .author-name {
+            font-family: 'Source Han Serif SC', serif;
+            font-size: 11px;
+            color: #c49a4a;
+            letter-spacing: 4px;
+            font-weight: 500;
+        }
+
+        .author-affil {
+            font-family: 'EB Garamond', 'Source Han Serif SC', serif;
+            font-size: 9px;
+            color: #5a5040;
+            letter-spacing: 2px;
+            font-style: italic;
+            margin-top: 3px;
+        }
+
+        /* ─── Portrait badge on story-card photo frame ──────────────────────── */
+        .photo-portrait-badge {
+            position: absolute;
+            bottom: 14px;
+            left: 14px;
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            border: 2px solid #c49a4a;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6), 0 0 18px rgba(196, 154, 74, 0.3);
+            overflow: hidden;
+            z-index: 4;
+            background: #1a1610;
+        }
+
+        .photo-portrait-badge img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: sepia(0.3) saturate(0.9);
+        }
+
+        /* ─── Live year clock (top-right) ─────────────────────────────────────── */
+        #year-clock {
+            position: absolute;
+            top: 36px;
+            right: 40px;
+            text-align: right;
+            z-index: 10;
+            pointer-events: none;
+            font-family: 'EB Garamond', serif;
+        }
+
+        #year-clock .big {
+            font-size: 64px;
+            font-weight: 500;
+            color: #d4af8f;
+            letter-spacing: 5px;
+            text-shadow: 0 0 20px rgba(196, 154, 74, 0.15);
+            font-variant-numeric: tabular-nums;
+            line-height: 1;
+            font-family: 'Source Han Serif SC', 'Playfair Display', serif;
+        }
+
+        #year-clock .sub {
+            margin-top: 8px;
+            font-size: 10px;
+            color: #6a5a40;
+            letter-spacing: 4px;
+            font-family: 'EB Garamond', serif;
+            font-style: italic;
+        }
+
+        /* ─── Map / Globe ─────────────────────────────────────────────────────── */
+        #map-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        svg {
+            width: 100%;
+            height: 100%;
+            cursor: grab;
+        }
+
+        svg.dragging {
+            cursor: grabbing;
+        }
+
+        .land {
+            fill: #1a1e2a;
+            stroke: #2a3045;
+            stroke-width: 0.4;
+        }
+
+        .graticule {
+            fill: none;
+            stroke: #1c2030;
+            stroke-width: 0.3;
+        }
+
+        .sphere {
+            fill: url(#ocean-gradient);
+            stroke: #3a3020;
+            stroke-width: 0.6;
+        }
+
+        .sphere-glow {
+            fill: none;
+            stroke: #c49a4a;
+            stroke-width: 2;
+            opacity: 0.12;
+            filter: blur(8px);
+        }
+
+        .journey-arc {
+            fill: none;
+            stroke: #c49a4a;
+            stroke-width: 1.2;
+            stroke-dasharray: 4 3;
+            opacity: 0.65;
+            animation: dashflow 1.4s linear infinite;
+        }
+
+        @keyframes dashflow {
+            to { stroke-dashoffset: -14; }
+        }
+
+        /* Starfield behind the globe */
+        .star {
+            fill: #e8dcc8;
+        }
+
+        /* Arrival ripple — gold ring expanding from a city on arrival */
+        .arrival-ripple {
+            fill: none;
+            pointer-events: none;
+        }
+
+        /* Staggered card content reveal — cascades in when card becomes visible */
+        @keyframes sc-rise {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes sc-fade {
+            from { opacity: 0; filter: blur(4px); }
+            to   { opacity: 1; filter: blur(0); }
+        }
+        #story-card.visible .photo-frame        { animation: sc-fade 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0s both; }
+        #story-card.visible .story-year         { animation: sc-rise 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) 0.08s both; }
+        #story-card.visible .story-name         { animation: sc-rise 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) 0.18s both; }
+        #story-card.visible .story-age          { animation: sc-rise 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) 0.28s both; }
+        #story-card.visible .story-event        { animation: sc-rise 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.38s both; }
+        #story-card.visible .story-publications { animation: sc-rise 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.48s both; }
+        #story-card.visible .story-context      { animation: sc-rise 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.58s both; }
+        #story-card.visible .story-quote        { animation: sc-rise 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) 0.70s both; }
+
+        .journey-arc-glow {
+            fill: none;
+            stroke: #e8b86d;
+            stroke-width: 2.5;
+            opacity: 0.3;
+            filter: blur(3px);
+        }
+
+        .city-outer {
+            fill: none;
+            stroke: #c49a4a;
+            stroke-width: 1;
+            opacity: 0.4;
+        }
+
+        .city-dot {
+            fill: #e8b86d;
+            cursor: pointer;
+            transition: r 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), fill 0.3s ease-out, filter 0.3s ease-out;
+            filter: drop-shadow(0 0 2px rgba(232, 184, 109, 0.3));
+        }
+
+        .city-dot.active {
+            fill: #ffd88a;
+            filter: drop-shadow(0 0 6px rgba(255, 216, 138, 0.6));
+        }
+
+        .city-dot.visited {
+            fill: #e8b86d;
+            filter: drop-shadow(0 0 3px rgba(232, 184, 109, 0.4));
+        }
+
+        .city-dot.unvisited {
+            fill: #6a5a3a;
+            filter: drop-shadow(0 0 1px rgba(106, 90, 58, 0.2));
+        }
+
+        .city-dot:hover {
+            fill: #ffd88a;
+            filter: drop-shadow(0 0 8px rgba(255, 216, 138, 0.7));
+        }
+
+        .city-pulse {
+            fill: #e8b86d;
+            opacity: 0;
+        }
+
+        .city-label {
+            font-family: 'Source Han Serif SC', serif;
+            font-size: 11px;
+            fill: #c4ad82;
+            pointer-events: none;
+            letter-spacing: 2px;
+            font-weight: 500;
+            transition: fill 0.3s ease-out, font-size 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), font-weight 0.3s ease-out;
+        }
+
+        .city-label.active {
+            fill: #ffd88a;
+            font-size: 12px;
+        }
+
+        .city-label.unvisited {
+            fill: #5a4a30;
+        }
+
+        /* ─── Hover tooltip (small) ──────────────────────────────────────────── */
+        #tooltip {
+            position: absolute;
+            background: rgba(13, 15, 20, 0.92);
+            border: 1px solid #3a3020;
+            border-left: 3px solid #c49a4a;
+            padding: 12px 16px;
+            max-width: 260px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+            z-index: 100;
+            -webkit-backdrop-filter: blur(8px);
+            backdrop-filter: blur(8px);
+        }
+
+        #tooltip.visible {
+            opacity: 1;
+        }
+
+        #tooltip .year {
+            font-size: 11px;
+            color: #c49a4a;
+            letter-spacing: 3px;
+            margin-bottom: 4px;
+        }
+
+        #tooltip .city-name {
+            font-size: 15px;
+            color: #e8dcc8;
+            letter-spacing: 2px;
+        }
+
+        /* ─── Story card (large, for playback) ───────────────────────────────── */
+        #story-card {
+            position: absolute;
+            left: 50px;
+            top: 50%;
+            transform: translateY(-50%) translateX(-30px);
+            width: 380px;
+            background: rgba(13, 15, 20, 0.88);
+            border: 1px solid #3a3020;
+            border-left: 3px solid #c49a4a;
+            padding: 0;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.7s ease, transform 0.7s ease;
+            z-index: 50;
+            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 40px rgba(196, 154, 74, 0.08);
+        }
+
+        #story-card.visible {
+            opacity: 1;
+            transform: translateY(-50%) translateX(0);
+        }
+
+        .photo-frame {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: linear-gradient(135deg, #2a2518 0%, #1a1610 50%, #0f0c08 100%);
+            overflow: hidden;
+            border-bottom: 1px solid #3a3020;
+        }
+
+        .photo-frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: sepia(0.25) saturate(0.85) brightness(0.9);
+        }
+
+        .photo-placeholder {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background:
+                radial-gradient(circle at 30% 30%, rgba(196, 154, 74, 0.12), transparent 60%),
+                linear-gradient(135deg, #2a2518 0%, #1a1610 50%, #0f0c08 100%);
+            z-index: 0;
+        }
+
+        .photo-placeholder::before,
+        .photo-placeholder::after {
+            content: '';
+            position: absolute;
+            border: 1px solid rgba(196, 154, 74, 0.18);
+            pointer-events: none;
+        }
+
+        .photo-placeholder::before {
+            inset: 12px;
+        }
+
+        .photo-placeholder::after {
+            inset: 16px;
+            border-color: rgba(196, 154, 74, 0.06);
+        }
+
+        .photo-placeholder-inner {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            padding: 0 20px;
+        }
+
+        .photo-placeholder-name {
+            font-family: 'Source Han Serif SC', serif;
+            font-size: 34px;
+            color: #e8dcc8;
+            font-weight: 300;
+            letter-spacing: 8px;
+            text-shadow: 0 0 30px rgba(196, 154, 74, 0.35);
+            margin-bottom: 8px;
+        }
+
+        .photo-placeholder-en {
+            font-family: 'EB Garamond', serif;
+            font-size: 14px;
+            color: #c49a4a;
+            font-style: italic;
+            letter-spacing: 3px;
+        }
+
+        .photo-frame img {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+        }
+
+
+        .story-body {
+            padding: 22px 26px 24px;
+        }
+
+        .story-year {
+            font-size: 11px;
+            color: #c49a4a;
+            letter-spacing: 5px;
+            margin-bottom: 8px;
+            font-family: 'EB Garamond', serif;
+            font-weight: 500;
+        }
+
+        .story-name {
+            font-size: 28px;
+            font-weight: 500;
+            color: #e8dcc8;
+            margin-bottom: 14px;
+            letter-spacing: 4px;
+            font-family: 'Source Han Serif SC', 'Playfair Display', serif;
+        }
+
+        .story-name span {
+            font-size: 13px;
+            color: #9a8a70;
+            margin-left: 12px;
+            font-style: italic;
+            letter-spacing: 2px;
+            font-family: 'EB Garamond', serif;
+            font-weight: 400;
+        }
+
+        .story-event {
+            font-size: 14px;
+            color: #b8a888;
+            line-height: 2.2;
+            margin-bottom: 14px;
+            letter-spacing: 1px;
+            font-family: 'Source Han Serif SC', serif;
+            font-weight: 400;
+        }
+
+        .story-quote {
+            font-size: 13px;
+            color: #9a8a70;
+            font-style: italic;
+            line-height: 2;
+            border-top: 1px solid #2a2518;
+            padding-top: 14px;
+            white-space: pre-line;
+            letter-spacing: 0.5px;
+            font-family: 'EB Garamond', serif;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* ─── Story card: age / publications / world-context ─────────────────── */
+        .story-age {
+            font-size: 11px;
+            color: #8a7a60;
+            letter-spacing: 2px;
+            margin-top: -10px;
+            margin-bottom: 14px;
+            font-style: italic;
+            font-family: 'EB Garamond', 'Source Han Serif SC', serif;
+        }
+
+        .story-age .age-stage {
+            color: #c49a4a;
+            margin-right: 8px;
+            font-style: normal;
+            letter-spacing: 3px;
+        }
+
+        .story-publications {
+            margin-top: 14px;
+            margin-bottom: 14px;
+            padding: 10px 14px;
+            background: rgba(196, 154, 74, 0.05);
+            border-left: 2px solid #c49a4a;
+        }
+
+        .story-pub-label {
+            font-size: 10px;
+            color: #c49a4a;
+            letter-spacing: 3px;
+            margin-bottom: 8px;
+            font-family: 'Source Han Serif SC', serif;
+        }
+
+        .story-pub {
+            font-size: 11px;
+            color: #c4ad82;
+            line-height: 1.8;
+            display: flex;
+            gap: 10px;
+            align-items: baseline;
+        }
+
+        .story-pub-year {
+            color: #8a6a2a;
+            font-family: 'EB Garamond', serif;
+            font-style: italic;
+            font-size: 11px;
+            min-width: 34px;
+            flex-shrink: 0;
+        }
+
+        .story-pub em {
+            color: #e8dcc8;
+            font-style: italic;
+            margin-right: 4px;
+        }
+
+        .story-context {
+            margin-top: 14px;
+            margin-bottom: 14px;
+            padding-top: 12px;
+            border-top: 1px dashed #2a2518;
+        }
+
+        .story-context-label {
+            font-size: 10px;
+            color: #8a7a60;
+            letter-spacing: 4px;
+            margin-bottom: 8px;
+            font-family: 'Source Han Serif SC', serif;
+        }
+
+        .story-context-label::before {
+            content: '◈ ';
+            color: #c49a4a;
+        }
+
+        .story-context-events {
+            list-style: none;
+            padding: 0;
+        }
+
+        .story-context-events li {
+            font-size: 11px;
+            color: #7a6e55;
+            line-height: 1.8;
+            padding-left: 14px;
+            position: relative;
+        }
+
+        .story-context-events li::before {
+            content: '·';
+            position: absolute;
+            left: 2px;
+            top: -2px;
+            color: #c49a4a;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        /* ─── Epoch ribbon (historical eras + world milestones) ──────────────── */
+        #epoch-ribbon {
+            position: absolute;
+            bottom: 96px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 760px;
+            max-width: 82%;
+            z-index: 15;
+            font-family: 'EB Garamond', 'Source Han Serif SC', serif;
+            pointer-events: none;
+        }
+
+        #epoch-ribbon .era-bands {
+            position: relative;
+            height: 10px;
+            border-radius: 5px;
+            overflow: hidden;
+            background: #141218;
+            border: 1px solid #2a2518;
+            pointer-events: auto;
+        }
+
+        .era {
+            position: absolute;
+            top: 0;
+            height: 100%;
+            opacity: 0.7;
+            overflow: hidden;
+            transition: opacity 0.3s;
+        }
+
+        .era:hover {
+            opacity: 1;
+        }
+
+        .era-label {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 8px;
+            letter-spacing: 2px;
+            color: rgba(232, 220, 200, 0.55);
+            white-space: nowrap;
+            pointer-events: none;
+            font-family: 'Source Han Serif SC', serif;
+        }
+
+        .era-milestones {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 10px;
+            pointer-events: none;
+        }
+
+        .milestone {
+            position: absolute;
+            top: 50%;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #ffd88a;
+            transform: translate(-50%, -50%);
+            pointer-events: auto;
+            cursor: help;
+            box-shadow: 0 0 6px rgba(255, 216, 138, 0.9);
+            z-index: 2;
+        }
+
+        .milestone:hover {
+            transform: translate(-50%, -50%) scale(1.5);
+        }
+
+        .milestone::after {
+            content: attr(data-label);
+            position: absolute;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            white-space: nowrap;
+            background: rgba(13, 15, 20, 0.96);
+            border: 1px solid #3a3020;
+            padding: 5px 10px;
+            font-size: 10px;
+            color: #e8dcc8;
+            letter-spacing: 1.5px;
+            border-radius: 2px;
+            font-family: 'Source Han Serif SC', serif;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            transition: opacity 0.2s;
+            pointer-events: none;
+        }
+
+        .milestone:hover::after {
+            opacity: 1;
+        }
+
+        .era-needle {
+            position: absolute;
+            top: -6px;
+            width: 2px;
+            height: 22px;
+            background: #ffd88a;
+            box-shadow: 0 0 10px rgba(255, 216, 138, 0.9);
+            transition: left 0.3s ease-out;
+            transform: translateX(-50%);
+            pointer-events: none;
+            z-index: 3;
+        }
+
+        .era-needle::after {
+            content: '';
+            position: absolute;
+            top: -7px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ffd88a;
+            box-shadow: 0 0 12px rgba(255, 216, 138, 1);
+        }
+
+        #epoch-ribbon .era-years {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 9px;
+            color: #6a5a40;
+            letter-spacing: 1px;
+        }
+
+        /* ─── Playback controls ──────────────────────────────────────────────── */
+        #controls {
+            position: absolute;
+            bottom: 28px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            z-index: 20;
+            background: rgba(13, 15, 20, 0.7);
+            border: 1px solid #2a2518;
+            border-radius: 40px;
+            padding: 10px 22px;
+            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
+        }
+
+        .ctrl-btn {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            border: 1px solid #3a3020;
+            background: transparent;
+            color: #c49a4a;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            padding: 0;
+            position: relative;
+        }
+
+        .ctrl-btn::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: 50%;
+            border: 1px solid transparent;
+            transition: border-color 0.3s ease-out;
+            pointer-events: none;
+        }
+
+        .ctrl-btn:hover {
+            background: rgba(196, 154, 74, 0.15);
+            border-color: #c49a4a;
+            color: #ffd88a;
+            box-shadow: 0 0 12px rgba(196, 154, 74, 0.25);
+        }
+
+        .ctrl-btn:hover::before {
+            border-color: rgba(196, 154, 74, 0.3);
+        }
+
+        .ctrl-btn svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        #play-btn {
+            width: 42px;
+            height: 42px;
+        }
+
+        #play-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        #progress-wrap {
+            flex: 1;
+            min-width: 320px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        #progress-track {
+            position: relative;
+            flex: 1;
+            height: 2px;
+            background: #2a2518;
+            border-radius: 1px;
+            cursor: pointer;
+        }
+
+        #progress-fill {
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 0;
+            background: linear-gradient(90deg, #8a6a2a, #e8b86d);
+            border-radius: 1px;
+        }
+
+        .tick {
+            position: absolute;
+            top: 50%;
+            width: 3px;
+            height: 3px;
+            border-radius: 50%;
+            background: #3a3020;
+            transform: translate(-50%, -50%);
+            transition: background 0.3s, box-shadow 0.3s;
+        }
+
+        .tick.passed {
+            background: #e8b86d;
+            box-shadow: 0 0 6px rgba(232, 184, 109, 0.6);
+        }
+
+        .tick.current {
+            background: #ffd88a;
+            box-shadow: 0 0 10px rgba(255, 216, 138, 0.9);
+        }
+
+        #progress-label {
+            font-size: 11px;
+            color: #8a7a60;
+            letter-spacing: 2px;
+            min-width: 52px;
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+
+        #hint {
+            position: absolute;
+            bottom: 92px;
+            right: 30px;
+            color: #3a3020;
+            font-size: 10px;
+            letter-spacing: 2px;
+            pointer-events: none;
+            opacity: 0.6;
+        }
+
+        /* ─── Welcome Panel ────────────────────────────────────────────────────── */
+        .welcome-panel {
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(ellipse at center, #141822 0%, #0a0c12 70%, #06080c 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            pointer-events: auto;
+            cursor: pointer;
+            opacity: 1;
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+
+        .welcome-panel.hidden {
+            opacity: 0;
+            transform: translateY(-100vh);
+            pointer-events: none;
+        }
+
+        .welcome-content {
+            text-align: center;
+            animation: welcomeFadeIn 1s ease-out 0.3s both;
+        }
+
+        .welcome-title {
+            font-size: 72px;
+            font-weight: 600;
+            color: #c49a4a;
+            margin-bottom: 8px;
+            letter-spacing: 8px;
+            font-family: 'Source Han Serif SC', 'Playfair Display', serif;
+            animation: welcomeFadeIn 1s ease-out;
+        }
+
+        .welcome-subtitle {
+            font-size: 28px;
+            color: #d4af8f;
+            margin-bottom: 24px;
+            font-style: italic;
+            font-family: 'Playfair Display', 'EB Garamond', serif;
+            font-weight: 500;
+            letter-spacing: 3px;
+            animation: welcomeFadeIn 1s ease-out 0.15s both;
+        }
+
+        .welcome-desc {
+            font-size: 22px;
+            color: #e8dcc8;
+            margin-bottom: 16px;
+            letter-spacing: 5px;
+            font-family: 'Source Han Serif SC', serif;
+            font-weight: 500;
+            animation: welcomeFadeIn 1s ease-out 0.3s both;
+        }
+
+        .welcome-text {
+            font-size: 14px;
+            color: #8a7a60;
+            margin-bottom: 48px;
+            letter-spacing: 2px;
+            animation: welcomeFadeIn 1s ease-out 0.45s both;
+        }
+
+        .welcome-quote {
+            font-size: 18px;
+            color: #c9a96d;
+            margin-bottom: 48px;
+            max-width: 520px;
+            line-height: 2;
+            font-style: italic;
+            font-family: 'Playfair Display', 'EB Garamond', serif;
+            font-weight: 400;
+            animation: welcomeFadeIn 1s ease-out 0.6s both;
+        }
+
+        .welcome-footer {
+            margin-top: 64px;
+            animation: welcomeFadeIn 1s ease-out 0.8s both;
+        }
+
+        .welcome-skip {
+            font-size: 12px;
+            color: #8a7a60;
+            letter-spacing: 2px;
+            opacity: 0.7;
+            animation: subtleBreathe 3s ease-in-out 0.2s infinite;
+        }
+
+        @keyframes subtleBreathe {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+
+        @keyframes welcomeFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 0.4; }
+        }
+
+
+        .welcome-credit {
+            position: absolute;
+            bottom: 32px;
+            right: 40px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: welcomeFadeIn 1s ease-out 0.6s both;
+        }
+
+        .welcome-portrait {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 1px solid rgba(196, 154, 74, 0.4);
+            overflow: hidden;
+            background: radial-gradient(circle at 30% 30%, #2a2518, #0f0c08);
+            flex-shrink: 0;
+            box-shadow: 0 0 12px rgba(196, 154, 74, 0.12);
+            position: relative;
+        }
+
+        .welcome-portrait img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: sepia(0.1) saturate(0.95);
+        }
+
+        .welcome-credit-text {
+            line-height: 1.4;
+        }
+
+        .welcome-credit-label {
+            font-family: 'EB Garamond', serif;
+            font-size: 9px;
+            letter-spacing: 3px;
+            color: #8a6a2a;
+            font-style: italic;
+            margin-bottom: 3px;
+        }
+
+        .welcome-credit-name {
+            font-family: 'Source Han Serif SC', serif;
+            font-size: 11px;
+            color: #c49a4a;
+            letter-spacing: 4px;
+            font-weight: 500;
+        }
+
+        .welcome-credit-affil {
+            font-family: 'EB Garamond', 'Source Han Serif SC', serif;
+            font-size: 9px;
+            color: #5a5040;
+            letter-spacing: 2px;
+            font-style: italic;
+            margin-top: 3px;
+        }
+
+        .welcome-watermark {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            opacity: 0.08;
+        }
+
+        .welcome-watermark svg {
+            width: 600px;
+            height: 600px;
+            animation: rotateGlobe 60s linear infinite;
+        }
+
+        @keyframes rotateGlobe {
+            from {
+                transform: rotateY(0deg);
+            }
+            to {
+                transform: rotateY(360deg);
+            }
+        }
+
+        /* ─── Ending Panel ──────────────────────────────────────────────────── */
+        .ending-panel {
+            position: fixed;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(ellipse at center, #141822 0%, #0a0c12 70%, #06080c 100%);
+            z-index: 1000;
+            flex-direction: column;
+        }
+
+        .ending-panel.active {
+            display: flex;
+            animation: endingFadeIn 0.8s ease-out;
+        }
+
+        @keyframes endingFadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .ending-content {
+            position: relative;
+            text-align: center;
+            z-index: 2;
+            animation: endingFadeIn 0.8s ease-out 0.2s both;
+        }
+
+        .ending-title {
+            font-size: 72px;
+            color: #c49a4a;
+            margin-bottom: 8px;
+            letter-spacing: 8px;
+            font-family: 'Source Han Serif SC', 'Playfair Display', serif;
+            font-weight: 600;
+            animation: endingFadeIn 0.8s ease-out 0.2s both;
+        }
+
+        .ending-subtitle {
+            font-size: 28px;
+            color: #d4af8f;
+            margin-bottom: 24px;
+            font-style: italic;
+            font-family: 'Playfair Display', 'EB Garamond', serif;
+            font-weight: 500;
+            letter-spacing: 3px;
+            animation: endingFadeIn 0.8s ease-out 0.35s both;
+        }
+
+        .ending-desc {
+            font-size: 14px;
+            color: #8a7a60;
+            margin-bottom: 48px;
+            letter-spacing: 2px;
+            animation: endingFadeIn 0.8s ease-out 0.5s both;
+        }
+
+        .ending-quote {
+            font-size: 18px;
+            color: #c9a96d;
+            margin-bottom: 32px;
+            max-width: 540px;
+            line-height: 2;
+            font-style: italic;
+            font-family: 'Playfair Display', 'EB Garamond', serif;
+            font-weight: 400;
+            animation: endingFadeIn 0.8s ease-out 0.65s both;
+        }
+
+        .ending-closing {
+            font-size: 20px;
+            color: #e8dcc8;
+            margin-bottom: 64px;
+            letter-spacing: 5px;
+            font-family: 'Source Han Serif SC', serif;
+            font-weight: 500;
+            animation: endingFadeIn 0.8s ease-out 0.8s both;
+        }
+
+        .ending-footer {
+            margin-top: 32px;
+            animation: endingFadeIn 0.8s ease-out 0.95s both;
+        }
+
+        .ending-skip {
+            font-size: 12px;
+            color: #8a7a60;
+            letter-spacing: 2px;
+            opacity: 0.7;
+            animation: subtleBreathe 3s ease-in-out 0.2s infinite;
+        }
+
+        .ending-watermark {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            opacity: 0.08;
+        }
+
+        .ending-watermark svg {
+            width: 600px;
+            height: 600px;
+            animation: rotateGlobe 60s linear infinite;
+        }
+
+        .ending-credit {
+            position: absolute;
+            bottom: 32px;
+            right: 40px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: endingFadeIn 0.8s ease-out 0.4s both;
+        }
+
+        .ending-portrait {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 1px solid rgba(196, 154, 74, 0.4);
+            overflow: hidden;
+            background: radial-gradient(circle at 30% 30%, #2a2518, #0f0c08);
+            flex-shrink: 0;
+            box-shadow: 0 0 12px rgba(196, 154, 74, 0.12);
+            position: relative;
+        }
+
+        .ending-portrait img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: sepia(0.1) saturate(0.95);
+        }
+
+        .ending-credit-text {
+            line-height: 1.4;
+        }
+
+        .ending-credit-label {
+            font-family: 'EB Garamond', serif;
+            font-size: 9px;
+            letter-spacing: 3px;
+            color: #8a6a2a;
+            font-style: italic;
+            margin-bottom: 3px;
+        }
+
+        .ending-credit-name {
+            font-family: 'Source Han Serif SC', serif;
+            font-size: 11px;
+            color: #c49a4a;
+            letter-spacing: 4px;
+            font-weight: 500;
+        }
+
+        .ending-credit-affil {
+            font-family: 'EB Garamond', 'Source Han Serif SC', serif;
+            font-size: 9px;
+            color: #5a5040;
+            letter-spacing: 2px;
+            font-style: italic;
+            margin-top: 3px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="welcome-panel" class="welcome-panel">
+        <div class="welcome-watermark" id="welcome-watermark"></div>
+        <div class="welcome-content">
+            <h2 class="welcome-title">段义孚</h2>
+            <p class="welcome-subtitle">Yi-Fu Tuan</p>
+            <p class="welcome-desc">一生漂泊的地理学</p>
+            <p class="welcome-text">1930 – 2022</p>
+            <p class="welcome-quote">"我们对某个地方的眷恋，往往在离开之后才真正开始。"</p>
+            <div class="welcome-footer">
+                <span class="welcome-skip">点击任处或按 Esc 开始</span>
+            </div>
+        </div>
+        <div class="welcome-credit">
+            <div class="welcome-portrait">
+                <img src="img/bz.png" alt="Bo Zhao" />
+            </div>
+            <div class="welcome-credit-text">
+                <div class="welcome-credit-label">Visualized by</div>
+                <div class="welcome-credit-name">赵 博 · Bo Zhao</div>
+                <div class="welcome-credit-affil">华盛顿大学 地理系 · University of Washington</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="ending-panel" class="ending-panel">
+        <div class="ending-watermark" id="ending-watermark"></div>
+        <div class="ending-content">
+            <h2 class="ending-title">段义孚</h2>
+            <p class="ending-subtitle">Yi-Fu Tuan</p>
+            <p class="ending-desc">1930 – 2022</p>
+            <p class="ending-quote">"我们对某个地方的眷恋，往往在离开之后才真正开始。"</p>
+            <p class="ending-closing">一生漂泊，寻找地方的意义</p>
+            <div class="ending-footer">
+                <span class="ending-skip">点击任处关闭</span>
+            </div>
+        </div>
+        <div class="ending-credit">
+            <div class="ending-portrait">
+                <img src="img/bz.png" alt="Bo Zhao" />
+            </div>
+            <div class="ending-credit-text">
+                <div class="ending-credit-label">A Tribute by</div>
+                <div class="ending-credit-name">赵 博 · Bo Zhao</div>
+                <div class="ending-credit-affil">华盛顿大学 地理系 · University of Washington</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="era-tint"></div>
+
+    <div id="header">
+        <div class="header-portrait">
+            <img src="img/yifu.png" alt="Yi-Fu Tuan" />
+        </div>
+        <div class="header-text">
+            <h1>段义孚 · 一生漂泊的地理学</h1>
+            <p>Yi-Fu Tuan · 1930–2022 · Geographer of the Human Heart</p>
+        </div>
+    </div>
+
+    <div id="year-clock">
+        <div class="big" id="year-big">1930</div>
+        <div class="sub" id="year-age">· 初生 ·</div>
+    </div>
+
+    <div id="hint">拖动地球 · 滚轮缩放</div>
+
+    <div id="map-container">
+        <svg id="map"></svg>
+    </div>
+
+    <div id="tooltip">
+        <div class="year" id="tt-year"></div>
+        <div class="city-name" id="tt-city"></div>
+    </div>
+
+    <div id="story-card">
+        <div class="photo-frame" id="story-photo"></div>
+        <div class="story-body">
+            <div class="story-year" id="sc-year"></div>
+            <div class="story-name" id="sc-name"></div>
+            <div class="story-age" id="sc-age"></div>
+            <div class="story-event" id="sc-event"></div>
+            <div class="story-publications hidden" id="sc-pubs"></div>
+            <div class="story-context hidden" id="sc-context"></div>
+            <div class="story-quote" id="sc-quote"></div>
+        </div>
+    </div>
+
+    <div id="epoch-ribbon">
+        <div class="era-bands" id="era-bands"></div>
+        <div class="era-milestones" id="era-milestones"></div>
+        <div class="era-needle" id="era-needle"></div>
+        <div class="era-years">
+            <span>1930</span><span>1950</span><span>1970</span><span>1990</span><span>2022</span>
+        </div>
+    </div>
+
+    <div id="author-credit">
+        <div class="author-portrait">
+            <img src="img/bz.png" alt="Bo Zhao" />
+        </div>
+        <div class="author-text">
+            <div class="author-label">✦ A Tribute by</div>
+            <div class="author-name">赵 博 · Bo Zhao</div>
+            <div class="author-affil">华盛顿大学 地理系 · University of Washington</div>
+        </div>
+    </div>
+
+    <div id="controls">
+        <button type="button" class="ctrl-btn" id="prev-btn" title="上一站">
+            <svg viewBox="0 0 16 16" fill="currentColor">
+                <path d="M11 2L5 8l6 6V2z" />
+            </svg>
+        </button>
+        <button type="button" class="ctrl-btn" id="play-btn" title="播放 / 暂停">
+            <svg viewBox="0 0 16 16" fill="currentColor" id="play-icon">
+                <path d="M4 2l10 6-10 6V2z" />
+            </svg>
+        </button>
+        <button type="button" class="ctrl-btn" id="next-btn" title="下一站">
+            <svg viewBox="0 0 16 16" fill="currentColor">
+                <path d="M5 2l6 6-6 6V2z" />
+            </svg>
+        </button>
+        <div id="progress-wrap">
+            <div id="progress-track">
+                <div id="progress-fill"></div>
+            </div>
+            <div id="progress-label">1 / 15</div>
+        </div>
+    </div>
+
+    <script>
+        // ─── Welcome Panel Control ─────────────────────────────────────────────
+        let journeyStarted = false;
+
+        function createGlobeWatermark() {
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('viewBox', '-300 -300 600 600');
+            svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+
+            // Globe circle
+            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            circle.setAttribute('cx', '0');
+            circle.setAttribute('cy', '0');
+            circle.setAttribute('r', '280');
+            circle.setAttribute('fill', 'none');
+            circle.setAttribute('stroke', '#c49a4a');
+            circle.setAttribute('stroke-width', '1.5');
+            svg.appendChild(circle);
+
+            // Latitude lines
+            for (let lat = -60; lat <= 60; lat += 30) {
+                const y = 280 * Math.sin((lat * Math.PI) / 180);
+                const r = 280 * Math.cos((lat * Math.PI) / 180);
+                const ellipse = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+                ellipse.setAttribute('cx', '0');
+                ellipse.setAttribute('cy', y);
+                ellipse.setAttribute('rx', r);
+                ellipse.setAttribute('ry', r * 0.3);
+                ellipse.setAttribute('fill', 'none');
+                ellipse.setAttribute('stroke', '#c49a4a');
+                ellipse.setAttribute('stroke-width', '1');
+                svg.appendChild(ellipse);
+            }
+
+            // Meridian lines
+            for (let lon = 0; lon < 360; lon += 60) {
+                const angle = (lon * Math.PI) / 180;
+                const x1 = 280 * Math.cos(angle);
+                const y1 = 280 * Math.sin(angle) * 0.3;
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', x1);
+                line.setAttribute('y1', y1);
+                line.setAttribute('x2', -x1);
+                line.setAttribute('y2', -y1);
+                line.setAttribute('stroke', '#c49a4a');
+                line.setAttribute('stroke-width', '1');
+                svg.appendChild(line);
+            }
+
+            // Equator
+            const equator = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            equator.setAttribute('x1', '-280');
+            equator.setAttribute('y1', '0');
+            equator.setAttribute('x2', '280');
+            equator.setAttribute('y2', '0');
+            equator.setAttribute('stroke', '#c49a4a');
+            equator.setAttribute('stroke-width', '1.5');
+            svg.appendChild(equator);
+
+            document.getElementById('welcome-watermark').appendChild(svg);
+        }
+
+        function createEndingWatermark() {
+            const container = document.getElementById('ending-watermark');
+            if (container.children.length > 0) return;
+
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('viewBox', '-300 -300 600 600');
+            svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+
+            // Globe circle
+            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            circle.setAttribute('cx', '0');
+            circle.setAttribute('cy', '0');
+            circle.setAttribute('r', '280');
+            circle.setAttribute('fill', 'none');
+            circle.setAttribute('stroke', '#c49a4a');
+            circle.setAttribute('stroke-width', '1.5');
+            svg.appendChild(circle);
+
+            // Latitude lines
+            for (let lat = -60; lat <= 60; lat += 30) {
+                const y = 280 * Math.sin((lat * Math.PI) / 180);
+                const r = 280 * Math.cos((lat * Math.PI) / 180);
+                const ellipse = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+                ellipse.setAttribute('cx', '0');
+                ellipse.setAttribute('cy', y);
+                ellipse.setAttribute('rx', r);
+                ellipse.setAttribute('ry', r * 0.3);
+                ellipse.setAttribute('fill', 'none');
+                ellipse.setAttribute('stroke', '#c49a4a');
+                ellipse.setAttribute('stroke-width', '1');
+                svg.appendChild(ellipse);
+            }
+
+            // Meridian lines
+            for (let lon = 0; lon < 360; lon += 60) {
+                const angle = (lon * Math.PI) / 180;
+                const x1 = 280 * Math.cos(angle);
+                const y1 = 280 * Math.sin(angle) * 0.3;
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', x1);
+                line.setAttribute('y1', y1);
+                line.setAttribute('x2', -x1);
+                line.setAttribute('y2', -y1);
+                line.setAttribute('stroke', '#c49a4a');
+                line.setAttribute('stroke-width', '1');
+                svg.appendChild(line);
+            }
+
+            // Equator
+            const equator = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            equator.setAttribute('x1', '-280');
+            equator.setAttribute('y1', '0');
+            equator.setAttribute('x2', '280');
+            equator.setAttribute('y2', '0');
+            equator.setAttribute('stroke', '#c49a4a');
+            equator.setAttribute('stroke-width', '1.5');
+            svg.appendChild(equator);
+
+            container.appendChild(svg);
+        }
+
+        function closeWelcomePanel() {
+            if (journeyStarted) return;
+            journeyStarted = true;
+
+            const panel = document.getElementById('welcome-panel');
+            panel.classList.add('hidden');
+
+            // Start journey after panel finishes animating out
+            setTimeout(() => {
+                runJourney();
+            }, 600);
+        }
+
+        function showEndingPanel() {
+            const panel = document.getElementById('ending-panel');
+            panel.classList.add('active');
+            createEndingWatermark();
+        }
+
+        function hideEndingPanel() {
+            const panel = document.getElementById('ending-panel');
+            panel.classList.remove('active');
+        }
+
+        // Click anywhere to close (and unlock music autoplay)
+        document.getElementById('welcome-panel').addEventListener('click', (e) => {
+            e.stopPropagation();
+            // 用户交互后，解锁音乐播放
+            if (bgMusic.paused && !musicMuted) {
+                bgMusic.play().catch(() => {});
+            }
+            closeWelcomePanel();
+        });
+
+        // Esc key to close (and unlock music autoplay)
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !journeyStarted) {
+                // 用户交互后，解锁音乐播放
+                if (bgMusic.paused && !musicMuted) {
+                    bgMusic.play().catch(() => {});
+                }
+                closeWelcomePanel();
+            }
+        });
+
+        // Auto-start after 8 seconds
+        setTimeout(() => {
+            if (!journeyStarted) {
+                closeWelcomePanel();
+            }
+        }, 8000);
+
+        // Click to close ending panel
+        document.getElementById('ending-panel').addEventListener('click', (e) => {
+            e.stopPropagation();
+            hideEndingPanel();
+        });
+
+        // Esc to close ending panel
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const endingPanel = document.getElementById('ending-panel');
+                if (endingPanel.classList.contains('active')) {
+                    hideEndingPanel();
+                }
+            }
+        });
+
+        // Initialize welcome panel
+        createGlobeWatermark();
+
+        // ─── Data ──────────────────────────────────────────────────────────────
+        // photo: optional URL. leave undefined/null to render an elegant
+        // monogram placeholder (city-initial + year). drop in real photo URLs
+        // anytime to replace.
+        const places = [
+            {
+                id: "tianjin", name: "天津", en: "Tianjin", coords: [117.2, 39.1], year: "1930", yearNum: 1930,
+                wikiSlug: "Tianjin",
+                event: `出生于天津，父亲段茂澜任外交官。在这里他第一次感知到"家"的气息，也第一次预感到即将到来的告别。`,
+                quote: `"我们对某个地方的眷恋，往往在离开之后才真正开始。"`, photo: null
+            },
+            {
+                id: "nanjing", name: "南京", en: "Nanjing", coords: [118.8, 32.1], year: "1930s", yearNum: 1935,
+                wikiSlug: "Nanjing",
+                event: `随父母迁居南京。民国首都的气息，旧都的繁华与动荡，在幼年心中留下模糊却深刻的轮廓。`,
+                quote: `"地方不只是地点，它是充满意义的空间。"`, photo: null
+            },
+            {
+                id: "shanghai", name: "上海", en: "Shanghai", coords: [121.5, 31.2], year: "1930s–40s", yearNum: 1938,
+                wikiSlug: "Shanghai",
+                event: `辗转上海，目睹这座城市的光怪陆离。东西文化的交叠，让童年的段义孚早早学会了以"他者"的眼光打量世界。`,
+                quote: `"人是在移动中理解空间的，在停留中感受地方。"`, photo: null
+            },
+            {
+                id: "chongqing", name: "重庆", en: "Chongqing", coords: [106.5, 29.6], year: "1940s", yearNum: 1941,
+                wikiSlug: "Chongqing",
+                event: `抗战时期辗转至重庆。山城的险峻与战时的压迫，构成了他日后书写"恐惧景观"的最初底色。`,
+                quote: `"恐惧是人类最原始的地理感受之一，它塑造了我们对空间的感知。"`, photo: null
+            },
+            {
+                id: "kunming", name: "昆明", en: "Kunming", coords: [102.7, 25.0], year: "1940s", yearNum: 1943,
+                wikiSlug: "Kunming",
+                event: `随家人至昆明。云贵高原的开阔天际线，是他童年记忆里少有的宁静。`,
+                quote: `"有些地方，仅仅是远山的轮廓，就足以成为一生的乡愁。"`, photo: null
+            },
+            {
+                id: "canberra", name: "堪培拉", en: "Canberra", coords: [149.1, -35.3], year: "1940s", yearNum: 1945,
+                wikiSlug: "Canberra",
+                event: `父亲出任澳大利亚使节，随迁堪培拉。南半球的天空与植被彻底陌生，少年第一次真正意识到自己是"局外人"。`,
+                quote: `"每一次移居，都是一次关于'我是谁'的追问。"`, photo: null
+            },
+            {
+                id: "manila", name: "马尼拉", en: "Manila", coords: [120.9, 14.6], year: "1940s", yearNum: 1946,
+                wikiSlug: "Manila",
+                event: `短暂驻留菲律宾。热带潮湿的空气与陌生的语言，又一个无法生根的地方。`,
+                quote: `"漂泊者对细节更敏感，因为没有什么是理所当然的。"`, photo: null
+            },
+            {
+                id: "london", name: "伦敦", en: "London", coords: [-0.1, 51.5], year: "1946", yearNum: 1946,
+                wikiSlug: "London",
+                event: `战后随家人赴英，在伦敦读中学。雾都的秩序与压抑，他开始用英语思考，却始终无法完全脱离汉语的情感底层。`,
+                quote: `"语言是最小的家园，也是最难离开的囚笼。"`, photo: null
+            },
+            {
+                id: "oxford", name: "牛津", en: "Oxford", coords: [-1.3, 51.8], year: "1948–1951", yearNum: 1948,
+                wikiSlug: "University_of_Oxford",
+                event: `就读牛津大学地理系，获学士与硕士学位。在这里他爱上了地理学，却也感到西方学术体系对"人的感受"的漠视。`,
+                quote: `"地图能描绘一切，唯独描绘不了站在那片土地上的人的心情。"`, photo: null
+            },
+            {
+                id: "berkeley", name: "伯克利", en: "Berkeley, CA", coords: [-122.3, 37.9], year: "1951–1957", yearNum: 1951,
+                wikiSlug: "University_of_California,_Berkeley",
+                event: `赴美国加州大学伯克利分校，师从地貌学家索尔（Carl Sauer），博士研究美国西南地形。学术根在自然地理，心却在漂向人文。`,
+                quote: `"地球的形状是自然的，但我们赋予它的意义是人文的。"`, photo: null
+            },
+            {
+                id: "bloomington", name: "布卢明顿", en: "Bloomington, IN", coords: [-86.5, 39.2], year: "1956–1960s", yearNum: 1956,
+                wikiSlug: "Indiana_University_Bloomington",
+                event: `于印第安纳大学任教，开始从自然地理学向人文主义地理学转型，思考"人与土地"的情感纽带。`,
+                quote: `"拓扑情感（Topophilia）：人对地方的爱，是地理学最被忽视的核心。"`, photo: null
+            },
+            {
+                id: "chicago", name: "芝加哥", en: "Chicago", coords: [-87.6, 41.9], year: "1960s", yearNum: 1966,
+                wikiSlug: "Chicago",
+                event: `转赴芝加哥大学执教。大湖区的冷冽城市气质，磨砺了他对"城市地方感"的敏锐观察。`,
+                quote: `"城市是人类最雄心勃勃的地方改造，也是最孤独的地方遗忘。"`, photo: null
+            },
+            {
+                id: "albuquerque", name: "阿尔伯克基", en: "Albuquerque, NM", coords: [-106.7, 35.1], year: "1960s", yearNum: 1967,
+                wikiSlug: "Albuquerque,_New_Mexico",
+                event: `任职新墨西哥大学，西南沙漠的空旷与原住民文化，深化了他对"景观与情感"的研究。《恋地情结》构思成形。`,
+                quote: `"沙漠让人感受到空间的纯粹，也感受到孤独的重量。"`, photo: null
+            },
+            {
+                id: "toronto", name: "多伦多", en: "Toronto", coords: [-79.4, 43.7], year: "1968–1984", yearNum: 1968,
+                wikiSlug: "Toronto",
+                event: `赴多伦多大学任教。《恋地情结》（1974）、《空间与地方》（1977）相继出版，人本主义地理学的奠基之作诞生于此。`,
+                quote: `"空间（Space）是抽象的自由，地方（Place）是具体的安全感。二者构成人类存在的两极张力。"`, photo: null
+            },
+            {
+                id: "madison", name: "麦迪逊", en: "Madison, WI", coords: [-89.4, 43.1], year: "1984", yearNum: 1984,
+                wikiSlug: "University_of_Wisconsin%E2%80%93Madison",
+                event: `赴威斯康星大学麦迪逊分校，任 Vilas 讲座教授。从明尼苏达 15 年学术盛年辗转至此，Science Hall 的这间办公室，将是他此后 38 年再未离开的家。`,
+                quote: `"漂泊者终有一日会放下行李——不是因为终于有了家，而是因为终于学会了带着所有地方走。"`, photo: null
+            },
+            {
+                id: "madison_escapism", name: "麦迪逊", en: "Madison · Escapism", coords: [-89.4, 43.1], year: "1998", yearNum: 1998,
+                event: `《Escapism · 逃避主义》出版。他写人类如何借建筑、园林、电影、宗教从"真实世界"里逃开——也第一次公开承认，自己终其一生都在逃。从 1941 年重庆的防空洞，到麦迪逊安静的书斋，他逃了大半个世纪。`,
+                quote: `"我们并非真的在逃避现实。我们只是在现实里，努力搭起一个能歇脚的梦。"`, photo: null
+            },
+            {
+                id: "madison_coming_home", name: "重返 · 重庆", en: "Coming Home to China", coords: [-89.4, 43.1], year: "2005", yearNum: 2005,
+                event: `时隔 63 年，他重返中国。在重庆津南村找到童年的老宅——父亲曾在那里躲日军轰炸，他曾在那里与兄弟姐妹轮流用一只木盆洗澡。当有人用"您"称呼他，眼泪突然涌了出来。两年后《Coming Home to China》出版。`,
+                quote: `"离开一个地方六十年，你以为自己早已是陌生人。可它认得你——在你的舌头上，在你哭声的节拍里。"`, photo: null
+            },
+            {
+                id: "madison_farewell", name: "终 · 麦迪逊", en: "Farewell", coords: [-89.4, 43.1], year: "2022", yearNum: 2022,
+                event: `2022 年 8 月 10 日，在麦迪逊的家中离世，享年 91 岁。一生十五座城市，最后葬于这片大湖旁的 Lakeside 墓园。终身未婚，无子嗣。遗著遗思，留与世人，与他一同追问"我属于哪里"。`,
+                quote: `"我一生都在问：我属于哪里？也许这个问题本身，就是我唯一真正的家园。"\n—《我是谁？》1999`, photo: null
+            }
+        ];
+
+        // ─── World context: what was happening globally around each station ───
+        const placeContext = {
+            tianjin: { events: ["1930 · 中原大战 · 国民政府巩固中央", "全球经济大萧条蔓延", "日本关东军密谋东北"] },
+            nanjing: { events: ["1931 · 九一八事变 · 日军占东北", "1934 · 红军长征开始", "1935 · 华北事变"] },
+            shanghai: { events: ["1937 · 七七事变 · 全面抗战爆发", "1937.12 · 南京大屠杀", "上海沦为'孤岛'"] },
+            chongqing: { events: ["1938–43 · 重庆大轰炸五年", "1941.12 · 珍珠港 · 二战升级", "陪都死守"] },
+            kunming: { events: ["1942 · 中国远征军入缅", "滇缅公路 · 抗战生命线", "1943 · 开罗会议"] },
+            canberra: { events: ["1945.8 · 广岛长崎 · 日本投降", "联合国成立 · 新秩序开端", "国共内战将起"] },
+            manila: { events: ["1946.7 · 菲律宾正式独立", "丘吉尔铁幕演说 · 冷战序幕", "亚洲殖民体系瓦解"] },
+            london: { events: ["战后英国配给制未解除", "工党执政 · 国民保健筹建中", "大英帝国日暮西山"] },
+            oxford: { events: ["1947 · 印巴分治 · 印度独立", "1948 · 柏林空运 · 冷战白热化", "1949 · 新中国成立"] },
+            berkeley: { events: ["1950–53 · 朝鲜战争", "麦卡锡主义席卷美国", "新中国抗美援朝"] },
+            bloomington: { events: ["1956 · 匈牙利事件 · 苏伊士危机", "1957 · 苏联 Sputnik 升空", "中国反右运动"] },
+            chicago: { events: ["1964 · 美国民权法案", "1966 · 文化大革命开始", "越战升级"] },
+            albuquerque: { events: ["1967 · '爱之夏' · 反战浪潮", "1968 · 马丁·路德·金遇刺 · 布拉格之春", "阿波罗计划白热化"] },
+            toronto: {
+                events: ["1968 · 巴黎五月风暴", "1969 · 阿波罗登月 · 首见'地球全景'", "1971 · 中美乒乓外交"],
+                pubs: [
+                    { year: 1974, title: "Topophilia", zh: "恋地情结" },
+                    { year: 1977, title: "Space and Place", zh: "空间与地方" },
+                    { year: 1979, title: "Landscapes of Fear", zh: "恐惧景观" }
+                ]
+            },
+            madison: {
+                events: ["1984 · 洛杉矶奥运会 · 里根连任", "1985 · 广场协议", "1989 · 柏林墙倒塌 · 冷战终结"],
+                pubs: [
+                    { year: 1984, title: "Dominance and Affection", zh: "支配与爱抚" }
+                ]
+            },
+            madison_escapism: {
+                events: ["1997 · 香港回归", "1998 · 亚洲金融危机", "1999 · 他完成自传《Who Am I?》"],
+                pubs: [
+                    { year: 1996, title: "Cosmos and Hearth", zh: "宇宙与炉台" },
+                    { year: 1998, title: "Escapism", zh: "逃避主义" },
+                    { year: 1999, title: "Who Am I?", zh: "我是谁？ · 自传" }
+                ]
+            },
+            madison_coming_home: {
+                events: ["2001 · 中国加入 WTO", "2003 · SARS 疫情", "2005 · 他 75 岁 · 首次归乡"],
+                pubs: [
+                    { year: 2007, title: "Coming Home to China", zh: "重返中国" }
+                ]
+            },
+            madison_farewell: {
+                events: ["2020 · 全球新冠疫情", "2022.2 · 俄乌战争爆发", "2022.8.10 · 段义孚逝于麦迪逊"]
+            }
+        };
+
+        // Auto-assign local photos. Files live in img/{id}.jpg.
+        // All Madison-era sub-stations (madison, madison_escapism, ...) share
+        // the same Science Hall image — same place, different text over time.
+        places.forEach(p => {
+            const base = p.id.startsWith("madison") ? "madison" : p.id;
+            p.photo = `img/${base}.jpg`;
+        });
+
+        // ─── Historical eras & world milestones (1930–2022) ───────────────────
+        const YEAR_START = 1930, YEAR_END = 2022, YEAR_SPAN = YEAR_END - YEAR_START;
+
+        const eras = [
+            { from: 1930, to: 1937, label: "民国", color: "#4a5a3a" },
+            { from: 1937, to: 1945, label: "抗战·二战", color: "#6a3028" },
+            { from: 1945, to: 1949, label: "战后", color: "#6a4a28" },
+            { from: 1949, to: 1969, label: "冷战前期", color: "#2a3a55" },
+            { from: 1969, to: 1991, label: "冷战后期", color: "#3a4a35" },
+            { from: 1991, to: 2022, label: "后冷战·全球化", color: "#4a3050" }
+        ];
+
+        const milestones = [
+            { year: 1931, label: "九一八事变" },
+            { year: 1937, label: "七七事变 · 全面抗战" },
+            { year: 1941, label: "珍珠港 · 二战升级" },
+            { year: 1945, label: "二战结束" },
+            { year: 1949, label: "新中国成立" },
+            { year: 1957, label: "Sputnik · 太空时代" },
+            { year: 1966, label: "文化大革命" },
+            { year: 1969, label: "阿波罗登月" },
+            { year: 1989, label: "柏林墙倒塌" },
+            { year: 2001, label: "9·11" },
+            { year: 2022, label: "段义孚逝世" }
+        ];
+
+        // ─── Setup ─────────────────────────────────────────────────────────────
+        const svg = d3.select("#map");
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        svg.attr("viewBox", `0 0 ${width} ${height}`);
+
+        const baseScale = Math.min(width, height) * 0.40;
+        const zoomScale = baseScale * 1.35;
+
+        const projection = d3.geoOrthographic()
+            .scale(baseScale)
+            .translate([width / 2, height / 2])
+            .rotate([-places[0].coords[0], -places[0].coords[1]])
+            .clipAngle(90);
+
+        const path = d3.geoPath().projection(projection);
+
+        // Defs
+        const defs = svg.append("defs");
+        const oceanGrad = defs.append("radialGradient")
+            .attr("id", "ocean-gradient").attr("cx", "35%").attr("cy", "35%").attr("r", "75%");
+        oceanGrad.append("stop").attr("offset", "0%").attr("stop-color", "#0f1320");
+        oceanGrad.append("stop").attr("offset", "60%").attr("stop-color", "#080b12");
+        oceanGrad.append("stop").attr("offset", "100%").attr("stop-color", "#04060a");
+
+        const glowFilter = defs.append("filter").attr("id", "glow");
+        glowFilter.append("feGaussianBlur").attr("stdDeviation", "3").attr("result", "b");
+        const fm = glowFilter.append("feMerge");
+        fm.append("feMergeNode").attr("in", "b");
+        fm.append("feMergeNode").attr("in", "SourceGraphic");
+
+        const subtleGlow = defs.append("filter").attr("id", "subtle-glow");
+        subtleGlow.append("feGaussianBlur").attr("stdDeviation", "1.5").attr("result", "b2");
+        const fm2 = subtleGlow.append("feMerge");
+        fm2.append("feMergeNode").attr("in", "b2");
+        fm2.append("feMergeNode").attr("in", "SourceGraphic");
+
+        const g = svg.append("g");
+        // Starfield — ~200 static stars behind the globe. Globe occludes stars
+        // in its disc, so they appear only in the surrounding "space".
+        const starsLayer = g.append("g").attr("class", "stars");
+        for (let i = 0; i < 220; i++) {
+            starsLayer.append("circle")
+                .attr("class", "star")
+                .attr("cx", Math.random() * width)
+                .attr("cy", Math.random() * height)
+                .attr("r", Math.random() * 1.2 + 0.3)
+                .attr("opacity", Math.random() * 0.7 + 0.15);
+        }
+
+        const haloCircle = g.append("circle")
+            .attr("class", "sphere-glow")
+            .attr("cx", width / 2).attr("cy", height / 2)
+            .attr("r", baseScale + 6);
+
+        const spherePath = g.append("path").datum({ type: "Sphere" }).attr("class", "sphere").attr("d", path);
+        const graticulePath = g.append("path").datum(d3.geoGraticule()()).attr("class", "graticule").attr("d", path);
+
+        let landPath, arcGlowPath, arcPath;
+        const cityLayer = g.append("g").attr("class", "city-layer");
+
+        // ─── State ─────────────────────────────────────────────────────────────
+        let currentIdx = 0;
+        let isPlaying = false;
+        let journeyAbort = null;  // AbortController-like token
+        let dragging = false;
+
+        const cityGroups = [];
+
+        // ─── Redraw all ────────────────────────────────────────────────────────
+        function redrawAll() {
+            spherePath.attr("d", path);
+            graticulePath.attr("d", path);
+            if (landPath) landPath.attr("d", path);
+            if (arcPath) arcPath.attr("d", path);
+            if (arcGlowPath) arcGlowPath.attr("d", path);
+            haloCircle.attr("r", projection.scale() + 6);
+            updateCityPositions();
+        }
+
+        function isVisible(coords) {
+            const r = projection.rotate();
+            return d3.geoDistance(coords, [-r[0], -r[1]]) < Math.PI / 2 - 0.02;
+        }
+
+        function updateCityPositions() {
+            cityGroups.forEach((grp, i) => {
+                const p = places[i];
+                if (isVisible(p.coords)) {
+                    const [x, y] = projection(p.coords);
+                    grp.attr("transform", `translate(${x},${y})`).style("display", null);
+                } else {
+                    grp.style("display", "none");
+                }
+            });
+        }
+
+        // ─── Progressive arc rendering ─────────────────────────────────────────
+        // Completed legs are full; the currently-flying leg extends to the camera's tip.
+        function renderArcs(completedIdx, activeLegTip) {
+            const features = [];
+            for (let i = 1; i <= completedIdx; i++) {
+                features.push({
+                    type: "Feature",
+                    geometry: { type: "LineString", coordinates: [places[i - 1].coords, places[i].coords] }
+                });
+            }
+            if (activeLegTip && completedIdx < places.length - 1) {
+                features.push({
+                    type: "Feature",
+                    geometry: { type: "LineString", coordinates: [places[completedIdx].coords, activeLegTip] }
+                });
+            }
+            const fc = { type: "FeatureCollection", features };
+            arcPath.datum(fc).attr("d", path);
+            arcGlowPath.datum(fc).attr("d", path);
+        }
+
+        // ─── Tweens ────────────────────────────────────────────────────────────
+        function raf() { return new Promise(r => requestAnimationFrame(r)); }
+        function sleep(ms) {
+            return new Promise((resolve, reject) => {
+                const token = journeyAbort;
+                const id = setTimeout(() => { if (token === journeyAbort) resolve(); else reject("abort"); }, ms);
+                if (token) token.onAbort = () => { clearTimeout(id); reject("abort"); };
+            });
+        }
+
+        function tween(duration, onTick, easing = d3.easeCubicInOut) {
+            return new Promise((resolve, reject) => {
+                const token = journeyAbort;
+                const start = performance.now();
+                let rafId = null;
+                function step(now) {
+                    if (token !== journeyAbort) { reject("abort"); return; }
+                    const t = Math.min(1, (now - start) / duration);
+                    onTick(easing(t), t);
+                    if (t < 1) rafId = requestAnimationFrame(step);
+                    else resolve();
+                }
+                if (token) token.onAbort = () => { if (rafId) cancelAnimationFrame(rafId); reject("abort"); };
+                rafId = requestAnimationFrame(step);
+            });
+        }
+
+        // Fly along great circle; start from the camera's *current* rotation
+        // (not places[fromIdx].coords) so drag-interrupted or mid-flight
+        // resumes don't snap back to the last station. The arc trail still
+        // anchors to places[fromIdx] so the line grows from the correct origin.
+        async function flyLeg(fromIdx, toIdx, duration) {
+            const curRot = projection.rotate();
+            const from = [-curRot[0], -curRot[1]];
+            const to = places[toIdx].coords;
+            const interp = d3.geoInterpolate(from, to);
+            const y0 = places[fromIdx].yearNum;
+            const y1 = places[toIdx].yearNum;
+
+            await tween(duration, (eased) => {
+                const pt = interp(eased);
+                projection.rotate([-pt[0], -pt[1], 0]);
+                renderArcs(fromIdx, pt);
+                redrawAll();
+                const y = Math.round(y0 + (y1 - y0) * eased);
+                setYearDisplay(y, true);
+            });
+            // ensure exact final state
+            projection.rotate([-to[0], -to[1], 0]);
+            renderArcs(toIdx, null);
+            redrawAll();
+        }
+
+        // Gold ring expanding from a city — punctuates arrivals
+        function rippleAt(coords) {
+            if (!g) return;
+            const [x, y] = projection(coords);
+            // Main ring
+            g.append("circle")
+                .attr("class", "arrival-ripple")
+                .attr("cx", x).attr("cy", y).attr("r", 5)
+                .attr("stroke", "#ffd88a")
+                .attr("stroke-width", 2.5)
+                .attr("opacity", 1)
+                .transition().duration(1500).ease(d3.easeQuadOut)
+                .attr("r", 80)
+                .attr("stroke-width", 0.2)
+                .attr("opacity", 0)
+                .remove();
+            // Secondary softer ring, delayed
+            g.append("circle")
+                .attr("class", "arrival-ripple")
+                .attr("cx", x).attr("cy", y).attr("r", 3)
+                .attr("stroke", "#e8b86d")
+                .attr("stroke-width", 1.5)
+                .attr("opacity", 0.6)
+                .transition().delay(280).duration(1400).ease(d3.easeQuadOut)
+                .attr("r", 50)
+                .attr("opacity", 0)
+                .remove();
+        }
+
+        async function zoomTo(target, duration = 900) {
+            const from = projection.scale();
+            const haloR = () => projection.scale() + 6;
+            await tween(duration, (eased) => {
+                projection.scale(from + (target - from) * eased);
+                haloCircle.attr("r", haloR());
+                redrawAll();
+            });
+        }
+
+        // ─── Highlight state ───────────────────────────────────────────────────
+        function highlightCity(idx) {
+            cityGroups.forEach((grp, i) => {
+                const dot = grp.select(".city-dot");
+                const lbl = grp.select(".city-label");
+                dot.classed("active", i === idx)
+                    .classed("visited", i < idx)
+                    .classed("unvisited", i > idx);
+                lbl.classed("active", i === idx)
+                    .classed("unvisited", i > idx);
+            });
+        }
+
+        function updateProgress() {
+            const pct = places.length > 1 ? (currentIdx / (places.length - 1)) * 100 : 0;
+            document.getElementById("progress-fill").style.width = pct + "%";
+            document.getElementById("progress-label").textContent = `${currentIdx + 1} / ${places.length}`;
+            document.querySelectorAll("#progress-track .tick").forEach((t, i) => {
+                t.classList.toggle("passed", i < currentIdx);
+                t.classList.toggle("current", i === currentIdx);
+            });
+        }
+
+        // ─── Story card ─────────────────────────────────────────────────────────
+        const storyCard = document.getElementById("story-card");
+        const storyPhoto = document.getElementById("story-photo");
+
+        function formatCoords([lon, lat]) {
+            const lonH = lon >= 0 ? "E" : "W";
+            const latH = lat >= 0 ? "N" : "S";
+            return `${Math.abs(lat).toFixed(1)}°${latH} · ${Math.abs(lon).toFixed(1)}°${lonH}`;
+        }
+
+        function renderPhoto(place) {
+            const age = place.yearNum - 1930;
+            const portraitUrl = portraitForAge(age);
+            const showPortrait = portraitUrl && place.id !== "madison";
+
+            // If there's neither a city photo nor a Tuan portrait for this
+            // age, hide the whole frame — the city name is already in the
+            // text body below, so the placeholder would just repeat it.
+            if (!place.photo && !showPortrait) {
+                storyPhoto.classList.add("hidden");
+                storyPhoto.innerHTML = "";
+                return;
+            }
+            storyPhoto.classList.remove("hidden");
+
+            const imgTag = place.photo
+                ? `<img src="${place.photo}" alt="${place.name}" onerror="this.parentNode.classList.add('hidden')"/>`
+                : '';
+            const portraitBadge = showPortrait
+                ? `<div class="photo-portrait-badge"><img src="${portraitUrl}" alt="Yi-Fu Tuan"/></div>`
+                : '';
+
+            storyPhoto.innerHTML = imgTag + portraitBadge;
+        }
+
+        // ─── Yi-Fu Tuan's portraits by life stage ─────────────────────────────
+        // Only `elderly` has a public photo (Tuan at 91). Young/middle photos
+        // aren't in open archives — fill in URLs or local paths if you find some
+        // and they'll appear as circular badges on the matching-age cards.
+        const tuanPortraits = {
+            young: null,    // ~1950 Oxford/Berkeley
+            middle: null,   // ~1970 Minnesota
+            elderly: "img/yifu.png"
+        };
+
+        function portraitForAge(age) {
+            if (age < 25) return tuanPortraits.young;
+            if (age < 55) return tuanPortraits.middle;
+            return tuanPortraits.elderly;
+        }
+
+        function lifeStage(age) {
+            if (age === 0) return "初生";
+            if (age < 13) return "童年";
+            if (age < 20) return "少年";
+            if (age < 40) return "青年";
+            if (age < 60) return "盛年";
+            return "晚年";
+        }
+
+        function showStoryCard(place) {
+            renderPhoto(place);
+            document.getElementById("sc-year").textContent = place.year;
+            document.getElementById("sc-name").innerHTML = `${place.name}<span>${place.en}</span>`;
+
+            const age = place.yearNum - 1930;
+            const ageLine = age === 0
+                ? `<span class="age-stage">初生</span>出生于此`
+                : `<span class="age-stage">${lifeStage(age)}</span>那一年，他 ${age} 岁`;
+            document.getElementById("sc-age").innerHTML = ageLine;
+
+            document.getElementById("sc-event").textContent = place.event;
+
+            const ctx = placeContext[place.id] || {};
+
+            const pubsEl = document.getElementById("sc-pubs");
+            if (ctx.pubs && ctx.pubs.length) {
+                pubsEl.innerHTML = `
+                    <div class="story-pub-label">✦ 此间著作</div>
+                    ${ctx.pubs.map(p => `
+                        <div class="story-pub">
+                            <span class="story-pub-year">${p.year}</span>
+                            <span><em>${p.title}</em>${p.zh ? ` · ${p.zh}` : ''}</span>
+                        </div>`).join('')}`;
+                pubsEl.classList.remove("hidden");
+            } else {
+                pubsEl.classList.add("hidden");
+            }
+
+            const ctxEl = document.getElementById("sc-context");
+            if (ctx.events && ctx.events.length) {
+                ctxEl.innerHTML = `
+                    <div class="story-context-label">同一年 · 世界正在发生</div>
+                    <ul class="story-context-events">
+                        ${ctx.events.map(e => `<li>${e}</li>`).join('')}
+                    </ul>`;
+                ctxEl.classList.remove("hidden");
+            } else {
+                ctxEl.classList.add("hidden");
+            }
+
+            document.getElementById("sc-quote").textContent = place.quote;
+            // Re-trigger the staggered reveal animations even if card is already visible
+            storyCard.classList.remove("visible");
+            void storyCard.offsetWidth;
+            storyCard.classList.add("visible");
+        }
+
+        function hideStoryCard() {
+            storyCard.classList.remove("visible");
+        }
+
+        function setYearDisplay(year, isFlying) {
+            document.getElementById("year-big").textContent = year;
+            const age = year - 1930;
+            const stage = lifeStage(age);
+            const right = isFlying ? "漂泊中" : "驻足";
+            document.getElementById("year-age").textContent =
+                age === 0 ? "· 初生 ·" : `${stage} · ${age} 岁 · ${right}`;
+            moveNeedle(year);
+            applyEraVisuals(year);
+        }
+
+        // ─── Era-driven globe ambience ────────────────────────────────────────
+        // Halo stroke + body vignette shift color as Tuan passes through epochs.
+        function eraForYear(year) {
+            for (const e of eras) {
+                if (year >= e.from && year < e.to) return e;
+            }
+            return eras[eras.length - 1];
+        }
+
+        let currentEraColor = null;
+        function applyEraVisuals(year) {
+            const era = eraForYear(year);
+            if (era.color === currentEraColor) return;
+            currentEraColor = era.color;
+            // Halo — smooth color transition via D3
+            if (haloCircle) {
+                haloCircle.transition()
+                    .duration(1500)
+                    .attr("stroke", era.color)
+                    .attr("opacity", 0.22);
+            }
+            // Body vignette
+            document.documentElement.style.setProperty("--era-color", era.color);
+        }
+
+        function setYearStatic(place) { setYearDisplay(place.yearNum, false); }
+
+        // ─── Epoch ribbon ─────────────────────────────────────────────────────
+        function buildEpochRibbon() {
+            const bands = document.getElementById("era-bands");
+            bands.innerHTML = "";
+            eras.forEach(e => {
+                const div = document.createElement("div");
+                div.className = "era";
+                div.style.left = ((e.from - YEAR_START) / YEAR_SPAN * 100) + "%";
+                div.style.width = ((e.to - e.from) / YEAR_SPAN * 100) + "%";
+                div.style.background = e.color;
+                const lbl = document.createElement("span");
+                lbl.className = "era-label";
+                lbl.textContent = e.label;
+                div.appendChild(lbl);
+                bands.appendChild(div);
+            });
+            const ms = document.getElementById("era-milestones");
+            ms.innerHTML = "";
+            milestones.forEach(m => {
+                const dot = document.createElement("div");
+                dot.className = "milestone";
+                dot.style.left = ((m.year - YEAR_START) / YEAR_SPAN * 100) + "%";
+                dot.setAttribute("data-label", `${m.year} · ${m.label}`);
+                ms.appendChild(dot);
+            });
+        }
+
+        function moveNeedle(year) {
+            const pct = Math.max(0, Math.min(100, (year - YEAR_START) / YEAR_SPAN * 100));
+            document.getElementById("era-needle").style.left = pct + "%";
+        }
+
+        // ─── Hover tooltip (small, cursor-following) ───────────────────────────
+        const tooltip = document.getElementById("tooltip");
+        function showHoverTip(event, place) {
+            document.getElementById("tt-year").textContent = place.year;
+            document.getElementById("tt-city").innerHTML = `${place.name} · <span style="color:#8a7a60;font-style:italic;">${place.en}</span>`;
+            tooltip.classList.add("visible");
+            const margin = 14, tw = 260, th = 70;
+            let tx = event.clientX + 18;
+            let ty = event.clientY - 20;
+            if (tx + tw > window.innerWidth - margin) tx = event.clientX - tw - 18;
+            if (ty + th > window.innerHeight - margin) ty = event.clientY - th - 20;
+            if (ty < margin) ty = margin;
+            tooltip.style.left = tx + "px";
+            tooltip.style.top = ty + "px";
+        }
+        function hideHoverTip() { tooltip.classList.remove("visible"); }
+
+        // ─── Journey orchestration ──────────────────────────────────────────────
+        function newToken() {
+            const token = { onAbort: null };
+            return token;
+        }
+        function abortJourney() {
+            if (journeyAbort && journeyAbort.onAbort) journeyAbort.onAbort();
+            journeyAbort = null;
+        }
+
+        async function runJourney(fromIdx = 0) {
+            const token = newToken();
+            journeyAbort = token;
+            isPlaying = true;
+            setPlayIcon(true);
+
+            try {
+                // ─── Departure cleanup — handle resume / restart gracefully ───
+                // If a card is still showing (paused state), fade it out first.
+                if (storyCard.classList.contains("visible")) {
+                    hideStoryCard();
+                    await sleep(650);
+                    if (token !== journeyAbort) return;
+                }
+                // If we're still zoomed in, pull back to globe view.
+                if (projection.scale() > baseScale * 1.05) {
+                    await zoomTo(baseScale, 900);
+                    if (token !== journeyAbort) return;
+                }
+
+                // ─── Restart — rotate back to Tianjin if the globe drifted ───
+                if (fromIdx === 0) {
+                    const curRot = projection.rotate();
+                    const curLonLat = [-curRot[0], -curRot[1]];
+                    if (d3.geoDistance(curLonLat, places[0].coords) > 0.02) {
+                        const interp = d3.geoInterpolate(curLonLat, places[0].coords);
+                        await tween(1800, (eased) => {
+                            const pt = interp(eased);
+                            projection.rotate([-pt[0], -pt[1], 0]);
+                            redrawAll();
+                        });
+                        if (token !== journeyAbort) return;
+                    }
+                    currentIdx = 0;
+                    highlightCity(0);
+                    updateProgress();
+                    renderArcs(0, null);
+                    setYearStatic(places[0]);
+                    redrawAll();
+
+                    rippleAt(places[0].coords);
+                    await zoomTo(zoomScale, 1000);
+                    if (token !== journeyAbort) return;
+                    showStoryCard(places[0]);
+                    await sleep(4200);
+                    if (token !== journeyAbort) return;
+                    hideStoryCard();
+                    await sleep(650);
+                    if (token !== journeyAbort) return;
+                    await zoomTo(baseScale, 900);
+                    if (token !== journeyAbort) return;
+                }
+
+                for (let i = Math.max(1, fromIdx); i < places.length; i++) {
+                    if (token !== journeyAbort) return;
+
+                    const prev = places[i - 1];
+                    const cur = places[i];
+                    const dist = d3.geoDistance(prev.coords, cur.coords);
+                    const sameLocation = dist < 0.01;
+
+                    if (sameLocation) {
+                        // Same place (e.g. Madison sub-stations) — no flight.
+                        // Tween the year clock forward, keep the zoom in.
+                        const y0 = prev.yearNum, y1 = cur.yearNum;
+                        await tween(1500, (eased) => {
+                            const y = Math.round(y0 + (y1 - y0) * eased);
+                            setYearDisplay(y, true);
+                        });
+                    } else {
+                        const flyDuration = 2200 + dist * 900;
+                        await flyLeg(i - 1, i, flyDuration);
+                    }
+                    if (token !== journeyAbort) return;
+
+                    // Arrive
+                    currentIdx = i;
+                    highlightCity(i);
+                    updateProgress();
+                    setYearStatic(cur);
+
+                    // Zoom in only if we're not already zoomed from a same-place hop
+                    if (!sameLocation) {
+                        rippleAt(cur.coords);
+                        await zoomTo(zoomScale, 900);
+                        if (token !== journeyAbort) return;
+                    }
+
+                    showStoryCard(cur);
+                    await sleep(4500);
+                    if (token !== journeyAbort) return;
+
+                    hideStoryCard();
+                    await sleep(650);
+                    if (token !== journeyAbort) return;
+
+                    // Zoom out only if the NEXT station is somewhere different.
+                    // This keeps consecutive same-place sub-stations smooth.
+                    if (i < places.length - 1) {
+                        const nextDist = d3.geoDistance(cur.coords, places[i + 1].coords);
+                        if (nextDist > 0.01) {
+                            await zoomTo(baseScale, 900);
+                        }
+                    }
+                }
+                // Finished — keep final state, show replay icon
+                isPlaying = false;
+                setPlayIcon(false);
+
+                // Show ending panel after journey completes
+                setTimeout(() => {
+                    showEndingPanel();
+                }, 1000);
+            } catch (e) {
+                // aborted — leave state as-is
+            }
+        }
+
+        function setPlayIcon(playing) {
+            const icon = document.getElementById("play-icon");
+            if (playing) {
+                icon.innerHTML = '<rect x="3" y="2" width="4" height="12"/><rect x="9" y="2" width="4" height="12"/>';
+            } else {
+                icon.innerHTML = '<path d="M4 2l10 6-10 6V2z"/>';
+            }
+        }
+
+        function togglePlay() {
+            if (isPlaying) {
+                abortJourney();
+                isPlaying = false;
+                setPlayIcon(false);
+            } else {
+                // If at end, restart from beginning
+                if (currentIdx >= places.length - 1) {
+                    hideStoryCard();
+                    runJourney(0);
+                } else {
+                    runJourney(currentIdx === 0 && !isPlaying ? 0 : currentIdx + 1);
+                }
+            }
+        }
+
+        // Jump directly to a station — INSTANT (no flight, no zoom tween).
+        // Used by prev / next buttons and city-dot clicks.
+        function jumpTo(idx) {
+            abortJourney();
+            isPlaying = false;
+            setPlayIcon(false);
+            idx = Math.max(0, Math.min(places.length - 1, idx));
+
+            const place = places[idx];
+            currentIdx = idx;
+
+            // Teleport camera to target, zoomed in
+            projection.rotate([-place.coords[0], -place.coords[1], 0]);
+            projection.scale(zoomScale);
+            haloCircle.attr("r", projection.scale() + 6);
+
+            highlightCity(idx);
+            updateProgress();
+            renderArcs(idx, null);
+            setYearStatic(place);
+            redrawAll();
+            rippleAt(place.coords);
+            showStoryCard(place);
+        }
+
+        // ─── Load world ─────────────────────────────────────────────────────────
+        d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json").then(world => {
+            landPath = g.insert("path", ".city-layer")
+                .datum(topojson.feature(world, world.objects.countries))
+                .attr("class", "land").attr("d", path);
+
+            graticulePath.raise();
+
+            arcGlowPath = g.insert("path", ".city-layer")
+                .datum({ type: "FeatureCollection", features: [] })
+                .attr("class", "journey-arc-glow").attr("d", path);
+
+            arcPath = g.insert("path", ".city-layer")
+                .datum({ type: "FeatureCollection", features: [] })
+                .attr("class", "journey-arc").attr("d", path);
+
+            // City markers
+            places.forEach((place, i) => {
+                const grp = cityLayer.append("g").attr("class", "city-group");
+                grp.append("circle").attr("class", "city-outer").attr("r", 9);
+                const pulse = grp.append("circle").attr("class", "city-pulse").attr("r", 5);
+                grp.append("circle")
+                    .attr("class", "city-dot unvisited")
+                    .attr("r", 4)
+                    .attr("filter", "url(#subtle-glow)")
+                    .on("mouseenter", function (ev) {
+                        d3.select(this).transition().duration(150).attr("r", 6);
+                        showHoverTip(ev, place);
+                    })
+                    .on("mousemove", function (ev) { showHoverTip(ev, place); })
+                    .on("mouseleave", function () {
+                        d3.select(this).transition().duration(150).attr("r", 4);
+                        hideHoverTip();
+                    })
+                    .on("click", () => jumpTo(i));
+                grp.append("text").attr("class", "city-label unvisited").attr("x", 10).attr("y", 4).text(place.name);
+                cityGroups.push(grp);
+                function animatePulse() {
+                    pulse.attr("r", 4).attr("opacity", 0.6)
+                        .transition().duration(1800).ease(d3.easeQuadOut)
+                        .attr("r", 14).attr("opacity", 0).on("end", animatePulse);
+                }
+                setTimeout(animatePulse, i * 100);
+            });
+
+            // Progress ticks
+            const track = document.getElementById("progress-track");
+            places.forEach((_, i) => {
+                const t = document.createElement("div");
+                t.className = "tick";
+                t.style.left = (places.length > 1 ? (i / (places.length - 1)) * 100 : 0) + "%";
+                track.appendChild(t);
+            });
+
+            buildEpochRibbon();
+            highlightCity(0);
+            updateProgress();
+            renderArcs(0, null);
+            redrawAll();
+            setYearStatic(places[0]);
+
+            // Auto-start journey is now controlled by welcome panel closeWelcomePanel()
+
+        }).catch(err => {
+            console.error("地图数据加载失败:", err);
+            svg.append("text")
+                .attr("x", width / 2).attr("y", height / 2)
+                .attr("text-anchor", "middle").attr("fill", "#c49a4a")
+                .text("加载地图数据中，请确保网络连接…");
+        });
+
+        // ─── Controls ───────────────────────────────────────────────────────────
+        document.getElementById("play-btn").addEventListener("click", togglePlay);
+        document.getElementById("prev-btn").addEventListener("click", () => jumpTo(currentIdx - 1));
+        document.getElementById("next-btn").addEventListener("click", () => jumpTo(currentIdx + 1));
+        document.getElementById("progress-track").addEventListener("click", (e) => {
+            const rect = e.currentTarget.getBoundingClientRect();
+            const t = (e.clientX - rect.left) / rect.width;
+            jumpTo(Math.round(t * (places.length - 1)));
+        });
+
+        // ─── Drag to rotate ─────────────────────────────────────────────────────
+        let dragStart = null, rotateStart = null;
+        svg.on("mousedown", (event) => {
+            dragStart = [event.clientX, event.clientY];
+            rotateStart = projection.rotate();
+            svg.classed("dragging", true);
+            dragging = true;
+            abortJourney();
+            isPlaying = false;
+            setPlayIcon(false);
+        });
+        window.addEventListener("mousemove", (event) => {
+            if (!dragStart) return;
+            const dx = event.clientX - dragStart[0];
+            const dy = event.clientY - dragStart[1];
+            const sens = 0.4;
+            const newLat = Math.max(-90, Math.min(90, rotateStart[1] - dy * sens));
+            projection.rotate([rotateStart[0] + dx * sens, newLat, 0]);
+            redrawAll();
+        });
+        window.addEventListener("mouseup", () => {
+            dragStart = null;
+            svg.classed("dragging", false);
+            dragging = false;
+        });
+
+        // Touch
+        svg.on("touchstart", (event) => {
+            const t = event.touches[0];
+            dragStart = [t.clientX, t.clientY];
+            rotateStart = projection.rotate();
+            abortJourney();
+            isPlaying = false;
+            setPlayIcon(false);
+        });
+        window.addEventListener("touchmove", (event) => {
+            if (!dragStart) return;
+            const t = event.touches[0];
+            const dx = t.clientX - dragStart[0];
+            const dy = t.clientY - dragStart[1];
+            const sens = 0.4;
+            const newLat = Math.max(-90, Math.min(90, rotateStart[1] - dy * sens));
+            projection.rotate([rotateStart[0] + dx * sens, newLat, 0]);
+            redrawAll();
+        }, { passive: true });
+        window.addEventListener("touchend", () => { dragStart = null; });
+
+        // Zoom
+        svg.on("wheel", (event) => {
+            event.preventDefault();
+            const curScale = projection.scale();
+            const factor = event.deltaY < 0 ? 1.08 : 0.92;
+            const newScale = Math.max(baseScale * 0.6, Math.min(baseScale * 2.8, curScale * factor));
+            projection.scale(newScale);
+            redrawAll();
+        }, { passive: false });
+
+        window.addEventListener("resize", () => { location.reload(); });
+
+        // Vignette
+        const vignette = document.createElement("div");
+        vignette.style.cssText = `
+            position:fixed; inset:0; pointer-events:none; z-index:5;
+            background: radial-gradient(ellipse at center,
+              transparent 55%,
+              rgba(6,8,12,0.6) 100%);
+        `;
+        document.body.appendChild(vignette);
+    </script>
+</body>
+
+</html>
