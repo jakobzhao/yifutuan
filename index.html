@@ -2021,6 +2021,10 @@
             updateCityPositions();
         }
 
+        function coordsEqual(coords1, coords2) {
+            return Math.abs(coords1[0] - coords2[0]) < 0.01 && Math.abs(coords1[1] - coords2[1]) < 0.01;
+        }
+
         function isVisible(coords) {
             const r = projection.rotate();
             return d3.geoDistance(coords, [-r[0], -r[1]]) < Math.PI / 2 - 0.02;
@@ -2030,11 +2034,17 @@
             cityGroups.forEach((grp, i) => {
                 const p = places[i];
 
-                // Only show the current city during playback to avoid label overlap
-                // (e.g., multiple Madison periods don't overlap on the map)
-                if (isPlaying && i !== currentIdx) {
-                    grp.style("display", "none");
-                    return;
+                // For locations with multiple time periods (e.g., Madison),
+                // only show the label for the current index, hide all others
+                if (i !== currentIdx) {
+                    // Check if current location has duplicates at same coordinates
+                    const hasDuplicate = places.some((other, idx) =>
+                        idx !== i && coordsEqual(other.coords, p.coords)
+                    );
+                    if (hasDuplicate) {
+                        grp.style("display", "none");
+                        return;
+                    }
                 }
 
                 if (isVisible(p.coords)) {
