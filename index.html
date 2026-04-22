@@ -5,7 +5,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>段义孚 · 一生漂泊的地理学</title>
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cdefs%3E%3ClinearGradient id='globeGrad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23444466;stop-opacity:1'/%3E%3Cstop offset='100%25' style='stop-color:%232a2a3e;stop-opacity:1'/%3E%3C/linearGradient%3E%3CradialGradient id='shine' cx='40%25' cy='40%25'%3E%3Cstop offset='0%25' style='stop-color:%23c49a4a;stop-opacity:0.8'/%3E%3Cstop offset='100%25' style='stop-color:%238a6e2e;stop-opacity:0'/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle cx='100' cy='100' r='95' fill='url(%23globeGrad)' stroke='%23c49a4a' stroke-width='2'/%3E%3Cpath d='M 100 20 Q 120 50 115 100 Q 130 140 100 170 Q 80 140 85 100 Q 80 50 100 20 Z' fill='%235a4a3a' opacity='0.6'/%3E%3Ccircle cx='100' cy='100' r='95' fill='url(%23shine)' opacity='0.4'/%3E%3C/svg%3E">
+    <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cdefs%3E%3ClinearGradient id='globeGrad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23444466;stop-opacity:1'/%3E%3Cstop offset='100%25' style='stop-color:%232a2a3e;stop-opacity:1'/%3E%3C/linearGradient%3E%3CradialGradient id='shine' cx='40%25' cy='40%25'%3E%3Cstop offset='0%25' style='stop-color:%23c49a4a;stop-opacity:0.8'/%3E%3Cstop offset='100%25' style='stop-color:%238a6e2e;stop-opacity:0'/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle cx='100' cy='100' r='95' fill='url(%23globeGrad)' stroke='%23c49a4a' stroke-width='2'/%3E%3Cpath d='M 100 20 Q 120 50 115 100 Q 130 140 100 170 Q 80 140 85 100 Q 80 50 100 20 Z' fill='%235a4a3a' opacity='0.6'/%3E%3Ccircle cx='100' cy='100' r='95' fill='url(%23shine)' opacity='0.4'/%3E%3C/svg%3E">
     <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
     <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
     <style>
@@ -304,8 +305,15 @@
         }
 
         @keyframes twinkle {
-            0%, 100% { opacity: 0.3; }
-            50% { opacity: 0.8; }
+
+            0%,
+            100% {
+                opacity: 0.3;
+            }
+
+            50% {
+                opacity: 0.8;
+            }
         }
 
         .journey-arc {
@@ -328,7 +336,9 @@
         }
 
         @keyframes dashflow {
-            to { stroke-dashoffset: -18; }
+            to {
+                stroke-dashoffset: -18;
+            }
         }
 
         /* Starfield behind the globe */
@@ -344,21 +354,60 @@
 
         /* Staggered card content reveal — cascades in when card becomes visible */
         @keyframes sc-rise {
-            from { opacity: 0; transform: translateY(12px); }
-            to   { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
+
         @keyframes sc-fade {
-            from { opacity: 0; filter: blur(4px); }
-            to   { opacity: 1; filter: blur(0); }
+            from {
+                opacity: 0;
+                filter: blur(4px);
+            }
+
+            to {
+                opacity: 1;
+                filter: blur(0);
+            }
         }
-        #story-card.visible .photo-frame        { animation: sc-fade 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0s both; }
-        #story-card.visible .story-year         { animation: sc-rise 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) 0.08s both; }
-        #story-card.visible .story-name         { animation: sc-rise 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) 0.18s both; }
-        #story-card.visible .story-age          { animation: sc-rise 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) 0.28s both; }
-        #story-card.visible .story-event        { animation: sc-rise 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.38s both; }
-        #story-card.visible .story-publications { animation: sc-rise 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.48s both; }
-        #story-card.visible .story-context      { animation: sc-rise 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.58s both; }
-        #story-card.visible .story-quote        { animation: sc-rise 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) 0.70s both; }
+
+        #story-card.visible .photo-frame {
+            animation: sc-fade 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0s both;
+        }
+
+        #story-card.visible .story-year {
+            animation: sc-rise 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) 0.08s both;
+        }
+
+        #story-card.visible .story-name {
+            animation: sc-rise 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) 0.18s both;
+        }
+
+        #story-card.visible .story-age {
+            animation: sc-rise 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) 0.28s both;
+        }
+
+        #story-card.visible .story-event {
+            animation: sc-rise 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.38s both;
+        }
+
+        #story-card.visible .story-publications {
+            animation: sc-rise 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.48s both;
+        }
+
+        #story-card.visible .story-context {
+            animation: sc-rise 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.58s both;
+        }
+
+        #story-card.visible .story-quote {
+            animation: sc-rise 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) 0.70s both;
+        }
 
         .journey-arc-glow {
             fill: none;
@@ -416,6 +465,7 @@
                 opacity: 1;
                 stroke-width: 3;
             }
+
             100% {
                 r: 30;
                 opacity: 0;
@@ -1102,8 +1152,15 @@
         }
 
         @keyframes subtleBreathe {
-            0%, 100% { opacity: 0.7; }
-            50% { opacity: 1; }
+
+            0%,
+            100% {
+                opacity: 0.7;
+            }
+
+            50% {
+                opacity: 1;
+            }
         }
 
         @keyframes welcomeFadeIn {
@@ -1111,6 +1168,7 @@
                 opacity: 0;
                 transform: translateY(20px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -1118,8 +1176,15 @@
         }
 
         @keyframes blink {
-            0%, 100% { opacity: 0.8; }
-            50% { opacity: 0.4; }
+
+            0%,
+            100% {
+                opacity: 0.8;
+            }
+
+            50% {
+                opacity: 0.4;
+            }
         }
 
 
@@ -1202,6 +1267,7 @@
             from {
                 transform: rotateY(0deg);
             }
+
             to {
                 transform: rotateY(360deg);
             }
@@ -1228,6 +1294,7 @@
             from {
                 opacity: 0;
             }
+
             to {
                 opacity: 1;
             }
@@ -1540,6 +1607,68 @@
     </div>
 
     <script>
+        const locale = new URLSearchParams(window.location.search).get("lang") === "en" ? "en" : "zh";
+        const isEnglish = locale === "en";
+
+        function localized(zhText, enText) {
+            return isEnglish && enText ? enText : zhText;
+        }
+
+        const uiText = {
+            title: localized("段义孚 · 一生漂泊的地理学", "Yi-Fu Tuan · A Life in Motion"),
+            welcomeTitle: localized("段义孚", "Yi-Fu Tuan"),
+            welcomeSubtitle: localized("Yi-Fu Tuan", "段义孚"),
+            welcomeDesc: localized("一生漂泊的地理学", "A Life in Motion"),
+            welcomeQuote: localized("\"我们对某个地方的眷恋，往往在离开之后才真正开始。\"", "\"Our attachment to a place often begins only after we have left it.\""),
+            welcomeSkip: localized("点击任处或按 Esc 开始", "Click anywhere or press Esc to begin"),
+            endingTitle: localized("段义孚", "Yi-Fu Tuan"),
+            endingSubtitle: localized("Yi-Fu Tuan", "段义孚"),
+            endingQuote: localized("\"我们对某个地方的眷恋，往往在离开之后才真正开始。\"", "\"Our attachment to a place often begins only after we have left it.\""),
+            endingClosing: localized("一生漂泊，寻找地方的意义", "A life in motion, searching for the meaning of place"),
+            endingLegacy: localized("地理学大师 · 人文精神的灯塔<br>影响了几代地理学者和思想家", "A master geographer and humanist beacon<br>whose work shaped generations of scholars and thinkers"),
+            endingSkip: localized("点击任处关闭", "Click anywhere to close"),
+            headerTitle: localized("段义孚 · 一生漂泊的地理学", "Yi-Fu Tuan · A Life in Motion"),
+            headerSubtitle: localized("Yi-Fu Tuan · 1930–2022 · Geographer of the Human Heart", "1930–2022 · Geographer of the Human Heart"),
+            hint: localized("拖动地球 · 滚轮缩放", "Drag globe · Scroll to zoom"),
+            authorName: localized("赵 博 · Bo Zhao", "Bo Zhao"),
+            authorAffil: localized("华盛顿大学 地理系 · University of Washington", "Department of Geography · University of Washington"),
+            prevTitle: localized("上一站", "Previous stop"),
+            playTitle: localized("播放 / 暂停", "Play / Pause"),
+            nextTitle: localized("下一站", "Next stop"),
+            pubLabel: localized("✦ 此间著作", "Works from This Period"),
+            contextLabel: localized("同一年 · 世界正在发生", "At the same time · around the world"),
+            inTransit: localized("漂泊中", "In transit"),
+            settled: localized("驻足", "At rest")
+        };
+
+        function applyStaticLocale() {
+            document.documentElement.lang = locale;
+            document.title = uiText.title;
+            document.querySelector(".welcome-title").textContent = uiText.welcomeTitle;
+            document.querySelector(".welcome-subtitle").textContent = uiText.welcomeSubtitle;
+            document.querySelector(".welcome-desc").textContent = uiText.welcomeDesc;
+            document.querySelector(".welcome-quote").textContent = uiText.welcomeQuote;
+            document.querySelector(".welcome-skip").textContent = uiText.welcomeSkip;
+            document.querySelector(".welcome-credit-name").textContent = uiText.authorName;
+            document.querySelector(".welcome-credit-affil").textContent = uiText.authorAffil;
+            document.querySelector(".ending-title").textContent = uiText.endingTitle;
+            document.querySelector(".ending-subtitle").textContent = uiText.endingSubtitle;
+            document.querySelector(".ending-quote").textContent = uiText.endingQuote;
+            document.querySelector(".ending-closing").textContent = uiText.endingClosing;
+            document.querySelector(".ending-legacy").innerHTML = uiText.endingLegacy;
+            document.querySelector(".ending-skip").textContent = uiText.endingSkip;
+            document.querySelector(".ending-credit-name").textContent = uiText.authorName;
+            document.querySelector(".ending-credit-affil").textContent = uiText.authorAffil;
+            document.querySelector("#header h1").textContent = uiText.headerTitle;
+            document.querySelector("#header p").textContent = uiText.headerSubtitle;
+            document.getElementById("hint").textContent = uiText.hint;
+            document.querySelector(".author-name").textContent = uiText.authorName;
+            document.querySelector(".author-affil").textContent = uiText.authorAffil;
+            document.getElementById("prev-btn").title = uiText.prevTitle;
+            document.getElementById("play-btn").title = uiText.playTitle;
+            document.getElementById("next-btn").title = uiText.nextTitle;
+        }
+
         // ─── Welcome Panel Control ─────────────────────────────────────────────
         let journeyStarted = false;
 
@@ -1723,6 +1852,7 @@
         });
 
         // Initialize welcome panel
+        applyStaticLocale();
         createGlobeWatermark();
 
         // ─── Data ──────────────────────────────────────────────────────────────
@@ -1734,126 +1864,145 @@
                 id: "tianjin", name: "天津", en: "Tianjin", coords: [117.2, 39.1], year: "1930", yearNum: 1930,
                 wikiSlug: "Tianjin",
                 event: `出生于天津，父亲段茂澜任外交官。在这里他第一次感知到"家"的气息，也第一次预感到即将到来的告别。`,
-                quote: `"我们对某个地方的眷恋，往往在离开之后才真正开始。"`, photo: null
+                eventEn: `Born in Tianjin to diplomat Tuan Mao-lan. Here he first sensed the feeling of home, and also the inevitability of farewell.`,
+                quote: `"我们对某个地方的眷恋，往往在离开之后才真正开始。"`, quoteEn: `"Our attachment to a place often begins only after we have left it."`, photo: null
             },
             {
                 id: "nanjing", name: "南京", en: "Nanjing", coords: [118.8, 32.1], year: "1930s", yearNum: 1935,
                 wikiSlug: "Nanjing",
                 event: `随父母迁居南京。民国首都的气息，旧都的繁华与动荡，在幼年心中留下模糊却深刻的轮廓。`,
-                quote: `"地方不只是地点，它是充满意义的空间。"`, photo: null
+                eventEn: `He moved with his parents to Nanjing. The aura of the Republican capital, with all its splendor and instability, left a deep if indistinct mark on his childhood.`,
+                quote: `"地方不只是地点，它是充满意义的空间。"`, quoteEn: `"Place is not merely location; it is space filled with meaning."`, photo: null
             },
             {
                 id: "shanghai", name: "上海", en: "Shanghai", coords: [121.5, 31.2], year: "1930s–40s", yearNum: 1938,
                 wikiSlug: "Shanghai",
                 event: `辗转上海，目睹这座城市的光怪陆离。东西文化的交叠，让童年的段义孚早早学会了以"他者"的眼光打量世界。`,
-                quote: `"人是在移动中理解空间的，在停留中感受地方。"`, photo: null
+                eventEn: `The family moved through Shanghai, where he witnessed the city's dazzling contradictions. The overlap of East and West taught him early to see the world through the eyes of an outsider.`,
+                quote: `"人是在移动中理解空间的，在停留中感受地方。"`, quoteEn: `"We understand space in motion, and feel place in moments of dwelling."`, photo: null
             },
             {
                 id: "chongqing", name: "重庆", en: "Chongqing", coords: [106.5, 29.6], year: "1940s", yearNum: 1941,
                 wikiSlug: "Chongqing",
                 event: `抗战时期辗转至重庆。山城的险峻与战时的压迫，构成了他日后书写"恐惧景观"的最初底色。`,
-                quote: `"恐惧是人类最原始的地理感受之一，它塑造了我们对空间的感知。"`, photo: null
+                eventEn: `During the war the family relocated to Chongqing. The city's steep terrain and wartime pressure became an early emotional ground for his later writing on landscapes of fear.`,
+                quote: `"恐惧是人类最原始的地理感受之一，它塑造了我们对空间的感知。"`, quoteEn: `"Fear is one of humanity's most primal geographic feelings; it shapes how we perceive space."`, photo: null
             },
             {
                 id: "kunming", name: "昆明", en: "Kunming", coords: [102.7, 25.0], year: "1940s", yearNum: 1943,
                 wikiSlug: "Kunming",
                 event: `随家人至昆明。云贵高原的开阔天际线，是他童年记忆里少有的宁静。`,
-                quote: `"有些地方，仅仅是远山的轮廓，就足以成为一生的乡愁。"`, photo: null
+                eventEn: `He moved with his family to Kunming. The wide horizon of the Yunnan-Guizhou Plateau offered one of the few calm scenes in his childhood memory.`,
+                quote: `"有些地方，仅仅是远山的轮廓，就足以成为一生的乡愁。"`, quoteEn: `"For some places, even the outline of distant mountains is enough to become a lifelong homesickness."`, photo: null
             },
             {
                 id: "canberra", name: "堪培拉", en: "Canberra", coords: [149.1, -35.3], year: "1940s", yearNum: 1945,
                 wikiSlug: "Canberra",
                 event: `父亲出任澳大利亚使节，随迁堪培拉。南半球的天空与植被彻底陌生，少年第一次真正意识到自己是"局外人"。`,
-                quote: `"每一次移居，都是一次关于'我是谁'的追问。"`, photo: null
+                eventEn: `When his father became China's envoy to Australia, the family moved to Canberra. The unfamiliar southern sky and vegetation made the adolescent Tuan fully aware, perhaps for the first time, of being an outsider.`,
+                quote: `"每一次移居，都是一次关于'我是谁'的追问。"`, quoteEn: `"Every relocation becomes another question about who I am."`, photo: null
             },
             {
                 id: "manila", name: "马尼拉", en: "Manila", coords: [120.9, 14.6], year: "1940s", yearNum: 1946,
                 wikiSlug: "Manila",
                 event: `短暂驻留菲律宾。热带潮湿的空气与陌生的语言，又一个无法生根的地方。`,
-                quote: `"漂泊者对细节更敏感，因为没有什么是理所当然的。"`, photo: null
+                eventEn: `He stayed briefly in the Philippines. The tropical humidity and unfamiliar language made it yet another place where roots could not take hold.`,
+                quote: `"漂泊者对细节更敏感，因为没有什么是理所当然的。"`, quoteEn: `"The wanderer notices details more sharply, because nothing can be taken for granted."`, photo: null
             },
             {
                 id: "london", name: "伦敦", en: "London", coords: [-0.1, 51.5], year: "1946", yearNum: 1946,
                 wikiSlug: "London",
                 event: `战后随家人赴英，在伦敦读中学。雾都的秩序与压抑，他开始用英语思考，却始终无法完全脱离汉语的情感底层。`,
-                quote: `"语言是最小的家园，也是最难离开的囚笼。"`, photo: null
+                eventEn: `After the war he moved with his family to Britain and attended secondary school in London. In the order and restraint of the city, he began to think in English while never fully leaving the emotional ground of Chinese.`,
+                quote: `"语言是最小的家园，也是最难离开的囚笼。"`, quoteEn: `"Language is the smallest homeland, and the hardest prison to leave."`, photo: null
             },
             {
                 id: "oxford", name: "牛津", en: "Oxford", coords: [-1.3, 51.8], year: "1948–1951", yearNum: 1948,
                 wikiSlug: "University_of_Oxford",
                 event: `就读牛津大学地理系，获学士与硕士学位。在这里他爱上了地理学，却也感到西方学术体系对"人的感受"的漠视。`,
-                quote: `"地图能描绘一切，唯独描绘不了站在那片土地上的人的心情。"`, photo: null
+                eventEn: `He studied geography at Oxford, earning both his bachelor's and master's degrees. Here he fell in love with geography, while also sensing how little conventional scholarship accounted for human feeling.`,
+                quote: `"地图能描绘一切，唯独描绘不了站在那片土地上的人的心情。"`, quoteEn: `"A map can depict almost everything except the feeling of the person standing on that ground."`, photo: null
             },
             {
                 id: "berkeley", name: "伯克利", en: "Berkeley, CA", coords: [-122.3, 37.9], year: "1951–1957", yearNum: 1951,
                 wikiSlug: "University_of_California,_Berkeley",
                 event: `赴美国加州大学伯克利分校，师从地貌学家索尔（Carl Sauer），博士研究美国西南地形。学术根在自然地理，心却在漂向人文。`,
-                quote: `"地球的形状是自然的，但我们赋予它的意义是人文的。"`, photo: null
+                eventEn: `He moved to the University of California, Berkeley, to study with the geographer Carl Sauer, focusing his doctoral work on landforms in the American Southwest. His training was in physical geography, but his mind was already drifting toward the human.`,
+                quote: `"地球的形状是自然的，但我们赋予它的意义是人文的。"`, quoteEn: `"The shape of the earth is natural, but the meanings we give it are human."`, photo: null
             },
             {
                 id: "bloomington", name: "布卢明顿", en: "Bloomington, IN", coords: [-86.5, 39.2], year: "1956–1960s", yearNum: 1956,
                 wikiSlug: "Indiana_University_Bloomington",
                 event: `于印第安纳大学任教，开始从自然地理学向人文主义地理学转型，思考"人与土地"的情感纽带。`,
-                quote: `"拓扑情感（Topophilia）：人对地方的爱，是地理学最被忽视的核心。"`, photo: null
+                eventEn: `At Indiana University he began shifting from physical geography toward humanistic geography, asking how emotional bonds connect people to the land.`,
+                quote: `"拓扑情感（Topophilia）：人对地方的爱，是地理学最被忽视的核心。"`, quoteEn: `"Topophilia, the love of place, is one of geography's most neglected cores."`, photo: null
             },
             {
                 id: "chicago", name: "芝加哥", en: "Chicago", coords: [-87.6, 41.9], year: "1960s", yearNum: 1966,
                 wikiSlug: "Chicago",
                 event: `转赴芝加哥大学执教。大湖区的冷冽城市气质，磨砺了他对"城市地方感"的敏锐观察。`,
-                quote: `"城市是人类最雄心勃勃的地方改造，也是最孤独的地方遗忘。"`, photo: null
+                eventEn: `He moved to the University of Chicago. The cold urban temperament of the Great Lakes sharpened his sensitivity to the city's sense of place.`,
+                quote: `"城市是人类最雄心勃勃的地方改造，也是最孤独的地方遗忘。"`, quoteEn: `"The city is humanity's most ambitious remaking of place, and also its loneliest forgetting of place."`, photo: null
             },
             {
                 id: "albuquerque", name: "阿尔伯克基", en: "Albuquerque, NM", coords: [-106.7, 35.1], year: "1960s", yearNum: 1967,
                 wikiSlug: "Albuquerque,_New_Mexico",
                 event: `任职新墨西哥大学，西南沙漠的空旷与原住民文化，深化了他对"景观与情感"的研究。《恋地情结》构思成形。`,
-                quote: `"沙漠让人感受到空间的纯粹，也感受到孤独的重量。"`, photo: null
+                eventEn: `At the University of New Mexico, the openness of the Southwest desert and the presence of Indigenous cultures deepened his work on landscape and feeling. The ideas behind Topophilia took shape here.`,
+                quote: `"沙漠让人感受到空间的纯粹，也感受到孤独的重量。"`, quoteEn: `"The desert reveals both the purity of space and the weight of solitude."`, photo: null
             },
             {
                 id: "toronto", name: "多伦多", en: "Toronto", coords: [-79.4, 43.7], year: "1968–1984", yearNum: 1968,
                 wikiSlug: "Toronto",
                 event: `赴多伦多大学任教。《恋地情结》（1974）、《空间与地方》（1977）相继出版，人本主义地理学的奠基之作诞生于此。`,
-                quote: `"空间（Space）是抽象的自由，地方（Place）是具体的安全感。二者构成人类存在的两极张力。"`, photo: null
+                eventEn: `He joined the University of Toronto. Here he published Topophilia in 1974 and Space and Place in 1977, two foundational works of humanistic geography.`,
+                quote: `"空间（Space）是抽象的自由，地方（Place）是具体的安全感。二者构成人类存在的两极张力。"`, quoteEn: `"Space is abstract freedom; place is concrete security. Together they form one of the essential tensions of human existence."`, photo: null
             },
             {
                 id: "madison", name: "麦迪逊", en: "Madison, WI", coords: [-89.4, 43.1], year: "1984", yearNum: 1984,
                 wikiSlug: "University_of_Wisconsin%E2%80%93Madison",
                 event: `赴威斯康星大学麦迪逊分校，任 Vilas 讲座教授。从明尼苏达 15 年学术盛年辗转至此，Science Hall 的这间办公室，将是他此后 38 年再未离开的家。`,
-                quote: `"漂泊者终有一日会放下行李——不是因为终于有了家，而是因为终于学会了带着所有地方走。"`, photo: null
+                eventEn: `He moved to the University of Wisconsin-Madison as a Vilas Research Professor. After fifteen productive years in Minnesota, the office he found in Science Hall became the place he would not leave for the next thirty-eight years.`,
+                quote: `"漂泊者终有一日会放下行李——不是因为终于有了家，而是因为终于学会了带着所有地方走。"`, quoteEn: `"One day the wanderer sets the luggage down, not because home has finally arrived, but because all previous places now travel within."`, photo: null
             },
             {
                 id: "madison_escapism", name: "麦迪逊", en: "Madison · Escapism", coords: [-89.4, 43.1], year: "1998", yearNum: 1998,
                 event: `《Escapism · 逃避主义》出版。他写人类如何借建筑、园林、电影、宗教从"真实世界"里逃开——也第一次公开承认，自己终其一生都在逃。从 1941 年重庆的防空洞，到麦迪逊安静的书斋，他逃了大半个世纪。`,
-                quote: `"我们并非真的在逃避现实。我们只是在现实里，努力搭起一个能歇脚的梦。"`, photo: null
+                eventEn: `Escapism was published. Tuan wrote about the ways people use architecture, gardens, films, and religion to step away from the real world, and he acknowledged more openly that he himself had been escaping all his life, from wartime shelters in Chongqing to the quiet study in Madison.`,
+                quote: `"我们并非真的在逃避现实。我们只是在现实里，努力搭起一个能歇脚的梦。"`, quoteEn: `"We are not truly escaping reality. We are trying, within reality, to build a dream where we can briefly rest."`, photo: null
             },
             {
                 id: "madison_coming_home", name: "重返 · 重庆", en: "Coming Home to China", coords: [-89.4, 43.1], year: "2005", yearNum: 2005,
                 event: `时隔 63 年，他重返中国。在重庆津南村找到童年的老宅——父亲曾在那里躲日军轰炸，他曾在那里与兄弟姐妹轮流用一只木盆洗澡。当有人用"您"称呼他，眼泪突然涌了出来。两年后《Coming Home to China》出版。`,
-                quote: `"离开一个地方六十年，你以为自己早已是陌生人。可它认得你——在你的舌头上，在你哭声的节拍里。"`, photo: null
+                eventEn: `Sixty-three years later he returned to China. In Chongqing he found the childhood house where his family had once sheltered from Japanese bombing and where he and his siblings had bathed one by one in a wooden basin. When someone addressed him with the respectful Chinese form of "you," he suddenly wept. Two years later he published Coming Home to China.`,
+                quote: `"离开一个地方六十年，你以为自己早已是陌生人。可它认得你——在你的舌头上，在你哭声的节拍里。"`, quoteEn: `"After sixty years away, you think you have become a stranger. But the place still knows you, in the shape of your tongue and in the rhythm of your tears."`, photo: null
             },
             {
                 id: "madison_farewell", name: "终 · 麦迪逊", en: "Farewell", coords: [-89.4, 43.1], year: "2022", yearNum: 2022,
                 event: `2022 年 8 月 10 日，在麦迪逊的家中离世，享年 91 岁。一生十五座城市，最后葬于这片大湖旁的 Lakeside 墓园。终身未婚，无子嗣。遗著遗思，留与世人，与他一同追问"我属于哪里"。`,
-                quote: `"我一生都在问：我属于哪里？也许这个问题本身，就是我唯一真正的家园。"\n—《我是谁？》1999`, photo: null
+                eventEn: `On August 10, 2022, he died at home in Madison at the age of ninety-one. After a life that crossed fifteen cities, he was laid to rest at Lakeside Cemetery beside the great lake. He never married and had no children, but left behind a body of thought that continues to ask where, and how, a person belongs.`,
+                quote: `"我一生都在问：我属于哪里？也许这个问题本身，就是我唯一真正的家园。"\n—《我是谁？》1999`, quoteEn: `"All my life I asked: where do I belong? Perhaps the question itself was my only true home."\n— Who Am I?, 1999`, photo: null
             }
         ];
 
         // ─── World context: what was happening globally around each station ───
         const placeContext = {
-            tianjin: { events: ["1930 · 中原大战 · 国民政府巩固中央", "全球经济大萧条蔓延", "日本关东军密谋东北"] },
-            nanjing: { events: ["1931 · 九一八事变 · 日军占东北", "1934 · 红军长征开始", "1935 · 华北事变"] },
-            shanghai: { events: ["1937 · 七七事变 · 全面抗战爆发", "1937.12 · 南京大屠杀", "上海沦为'孤岛'"] },
-            chongqing: { events: ["1938–43 · 重庆大轰炸五年", "1941.12 · 珍珠港 · 二战升级", "陪都死守"] },
-            kunming: { events: ["1942 · 中国远征军入缅", "滇缅公路 · 抗战生命线", "1943 · 开罗会议"] },
-            canberra: { events: ["1945.8 · 广岛长崎 · 日本投降", "联合国成立 · 新秩序开端", "国共内战将起"] },
-            manila: { events: ["1946.7 · 菲律宾正式独立", "丘吉尔铁幕演说 · 冷战序幕", "亚洲殖民体系瓦解"] },
-            london: { events: ["战后英国配给制未解除", "工党执政 · 国民保健筹建中", "大英帝国日暮西山"] },
-            oxford: { events: ["1947 · 印巴分治 · 印度独立", "1948 · 柏林空运 · 冷战白热化", "1949 · 新中国成立"] },
-            berkeley: { events: ["1950–53 · 朝鲜战争", "麦卡锡主义席卷美国", "新中国抗美援朝"] },
-            bloomington: { events: ["1956 · 匈牙利事件 · 苏伊士危机", "1957 · 苏联 Sputnik 升空", "中国反右运动"] },
-            chicago: { events: ["1964 · 美国民权法案", "1966 · 文化大革命开始", "越战升级"] },
-            albuquerque: { events: ["1967 · '爱之夏' · 反战浪潮", "1968 · 马丁·路德·金遇刺 · 布拉格之春", "阿波罗计划白热化"] },
+            tianjin: { events: ["1930 · 中原大战 · 国民政府巩固中央", "全球经济大萧条蔓延", "日本关东军密谋东北"], eventsEn: ["1930 · Central Plains War reshapes Republican China", "The Great Depression spreads worldwide", "Japan's Kwantung Army plots expansion in Northeast China"] },
+            nanjing: { events: ["1931 · 九一八事变 · 日军占东北", "1934 · 红军长征开始", "1935 · 华北事变"], eventsEn: ["1931 · Mukden Incident leads to Japanese occupation of Manchuria", "1934 · The Long March begins", "1935 · Crisis deepens in North China"] },
+            shanghai: { events: ["1937 · 七七事变 · 全面抗战爆发", "1937.12 · 南京大屠杀", "上海沦为'孤岛'"], eventsEn: ["1937 · Marco Polo Bridge Incident triggers full-scale war", "1937.12 · Nanjing Massacre", "Shanghai becomes an isolated wartime enclave"] },
+            chongqing: { events: ["1938–43 · 重庆大轰炸五年", "1941.12 · 珍珠港 · 二战升级", "陪都死守"], eventsEn: ["1938–43 · Five years of bombing in Chongqing", "1941.12 · Pearl Harbor escalates World War II", "China's wartime capital endures under siege"] },
+            kunming: { events: ["1942 · 中国远征军入缅", "滇缅公路 · 抗战生命线", "1943 · 开罗会议"], eventsEn: ["1942 · Chinese Expeditionary Force enters Burma", "The Burma Road remains a wartime lifeline", "1943 · Cairo Conference"] },
+            canberra: { events: ["1945.8 · 广岛长崎 · 日本投降", "联合国成立 · 新秩序开端", "国共内战将起"], eventsEn: ["1945.8 · Hiroshima and Nagasaki; Japan surrenders", "The United Nations is founded", "Civil war between Nationalists and Communists resumes in China"] },
+            manila: { events: ["1946.7 · 菲律宾正式独立", "丘吉尔铁幕演说 · 冷战序幕", "亚洲殖民体系瓦解"], eventsEn: ["1946.7 · The Philippines becomes independent", "Churchill's Iron Curtain speech marks the opening of the Cold War", "Colonial rule across Asia begins to unravel"] },
+            london: { events: ["战后英国配给制未解除", "工党执政 · 国民保健筹建中", "大英帝国日暮西山"], eventsEn: ["Britain remains under postwar rationing", "Labour governs while the NHS is being built", "The British Empire enters visible decline"] },
+            oxford: { events: ["1947 · 印巴分治 · 印度独立", "1948 · 柏林空运 · 冷战白热化", "1949 · 新中国成立"], eventsEn: ["1947 · Partition and independence of India", "1948 · Berlin Airlift intensifies the Cold War", "1949 · The People's Republic of China is founded"] },
+            berkeley: { events: ["1950–53 · 朝鲜战争", "麦卡锡主义席卷美国", "新中国抗美援朝"], eventsEn: ["1950–53 · Korean War", "McCarthyism sweeps through the United States", "China enters the Korean War"] },
+            bloomington: { events: ["1956 · 匈牙利事件 · 苏伊士危机", "1957 · 苏联 Sputnik 升空", "中国反右运动"], eventsEn: ["1956 · Hungarian uprising and Suez Crisis", "1957 · Sputnik launches into orbit", "China's Anti-Rightist Campaign begins"] },
+            chicago: { events: ["1964 · 美国民权法案", "1966 · 文化大革命开始", "越战升级"], eventsEn: ["1964 · U.S. Civil Rights Act", "1966 · Cultural Revolution begins in China", "The Vietnam War escalates"] },
+            albuquerque: { events: ["1967 · '爱之夏' · 反战浪潮", "1968 · 马丁·路德·金遇刺 · 布拉格之春", "阿波罗计划白热化"], eventsEn: ["1967 · Summer of Love and anti-war movements", "1968 · Martin Luther King Jr. assassinated; Prague Spring", "The Apollo program intensifies"] },
             toronto: {
                 events: ["1968 · 巴黎五月风暴", "1969 · 阿波罗登月 · 首见'地球全景'", "1971 · 中美乒乓外交"],
+                eventsEn: ["1968 · May uprising in Paris", "1969 · Apollo lands on the Moon; Earth seen whole", "1971 · Ping-pong diplomacy between China and the U.S."],
                 pubs: [
                     { year: 1974, title: "Topophilia", zh: "恋地情结" },
                     { year: 1977, title: "Space and Place", zh: "空间与地方" },
@@ -1862,12 +2011,14 @@
             },
             madison: {
                 events: ["1984 · 洛杉矶奥运会 · 里根连任", "1985 · 广场协议", "1989 · 柏林墙倒塌 · 冷战终结"],
+                eventsEn: ["1984 · Los Angeles Olympics; Reagan re-elected", "1985 · Plaza Accord", "1989 · Berlin Wall falls; Cold War nears its end"],
                 pubs: [
                     { year: 1984, title: "Dominance and Affection", zh: "支配与爱抚" }
                 ]
             },
             madison_escapism: {
                 events: ["1997 · 香港回归", "1998 · 亚洲金融危机", "1999 · 他完成自传《Who Am I?》"],
+                eventsEn: ["1997 · Hong Kong is handed over to China", "1998 · Asian financial crisis", "1999 · He completes his memoir Who Am I?"],
                 pubs: [
                     { year: 1996, title: "Cosmos and Hearth", zh: "宇宙与炉台" },
                     { year: 1998, title: "Escapism", zh: "逃避主义" },
@@ -1876,12 +2027,14 @@
             },
             madison_coming_home: {
                 events: ["2001 · 中国加入 WTO", "2003 · SARS 疫情", "2005 · 他 75 岁 · 首次归乡"],
+                eventsEn: ["2001 · China joins the WTO", "2003 · SARS outbreak", "2005 · He turns 75 and returns home for the first time"],
                 pubs: [
                     { year: 2007, title: "Coming Home to China", zh: "重返中国" }
                 ]
             },
             madison_farewell: {
-                events: ["2020 · 全球新冠疫情", "2022.2 · 俄乌战争爆发", "2022.8.10 · 段义孚逝于麦迪逊"]
+                events: ["2020 · 全球新冠疫情", "2022.2 · 俄乌战争爆发", "2022.8.10 · 段义孚逝于麦迪逊"],
+                eventsEn: ["2020 · Global COVID-19 pandemic", "2022.2 · Russia invades Ukraine", "2022.8.10 · Yi-Fu Tuan dies in Madison"]
             }
         };
 
@@ -1897,26 +2050,26 @@
         const YEAR_START = 1930, YEAR_END = 2022, YEAR_SPAN = YEAR_END - YEAR_START;
 
         const eras = [
-            { from: 1930, to: 1937, label: "民国", color: "#4a5a3a" },
-            { from: 1937, to: 1945, label: "抗战·二战", color: "#6a3028" },
-            { from: 1945, to: 1949, label: "战后", color: "#6a4a28" },
-            { from: 1949, to: 1969, label: "冷战前期", color: "#2a3a55" },
-            { from: 1969, to: 1991, label: "冷战后期", color: "#3a4a35" },
-            { from: 1991, to: 2022, label: "后冷战·全球化", color: "#4a3050" }
+            { from: 1930, to: 1937, label: "民国", labelEn: "Republican China", color: "#4a5a3a" },
+            { from: 1937, to: 1945, label: "抗战·二战", labelEn: "War in China · WWII", color: "#6a3028" },
+            { from: 1945, to: 1949, label: "战后", labelEn: "Postwar", color: "#6a4a28" },
+            { from: 1949, to: 1969, label: "冷战前期", labelEn: "Early Cold War", color: "#2a3a55" },
+            { from: 1969, to: 1991, label: "冷战后期", labelEn: "Late Cold War", color: "#3a4a35" },
+            { from: 1991, to: 2022, label: "后冷战·全球化", labelEn: "Post-Cold War · Globalization", color: "#4a3050" }
         ];
 
         const milestones = [
-            { year: 1931, label: "九一八事变" },
-            { year: 1937, label: "七七事变 · 全面抗战" },
-            { year: 1941, label: "珍珠港 · 二战升级" },
-            { year: 1945, label: "二战结束" },
-            { year: 1949, label: "新中国成立" },
-            { year: 1957, label: "Sputnik · 太空时代" },
-            { year: 1966, label: "文化大革命" },
-            { year: 1969, label: "阿波罗登月" },
-            { year: 1989, label: "柏林墙倒塌" },
-            { year: 2001, label: "9·11" },
-            { year: 2022, label: "段义孚逝世" }
+            { year: 1931, label: "九一八事变", labelEn: "Mukden Incident" },
+            { year: 1937, label: "七七事变 · 全面抗战", labelEn: "Marco Polo Bridge Incident" },
+            { year: 1941, label: "珍珠港 · 二战升级", labelEn: "Pearl Harbor" },
+            { year: 1945, label: "二战结束", labelEn: "End of World War II" },
+            { year: 1949, label: "新中国成立", labelEn: "PRC founded" },
+            { year: 1957, label: "Sputnik · 太空时代", labelEn: "Sputnik · Space Age" },
+            { year: 1966, label: "文化大革命", labelEn: "Cultural Revolution" },
+            { year: 1969, label: "阿波罗登月", labelEn: "Apollo Moon Landing" },
+            { year: 1989, label: "柏林墙倒塌", labelEn: "Fall of the Berlin Wall" },
+            { year: 2001, label: "9·11", labelEn: "9/11" },
+            { year: 2022, label: "段义孚逝世", labelEn: "Yi-Fu Tuan dies" }
         ];
 
         // ─── Setup ─────────────────────────────────────────────────────────────
@@ -2230,6 +2383,27 @@
         const storyCard = document.getElementById("story-card");
         const storyPhoto = document.getElementById("story-photo");
 
+        function primaryPlaceName(place) {
+            return localized(place.name, place.en);
+        }
+
+        function secondaryPlaceName(place) {
+            return isEnglish ? place.name : place.en;
+        }
+
+        function placeNameMarkup(place) {
+            const secondary = secondaryPlaceName(place);
+            return secondary ? `${primaryPlaceName(place)}<span>${secondary}</span>` : primaryPlaceName(place);
+        }
+
+        function placeEvent(place) {
+            return localized(place.event, place.eventEn);
+        }
+
+        function placeQuote(place) {
+            return localized(place.quote, place.quoteEn);
+        }
+
         function formatCoords([lon, lat]) {
             const lonH = lon >= 0 ? "E" : "W";
             const latH = lat >= 0 ? "N" : "S";
@@ -2252,7 +2426,7 @@
             storyPhoto.classList.remove("hidden");
 
             const imgTag = place.photo
-                ? `<img src="${place.photo}" alt="${place.name}" onerror="this.parentNode.classList.add('hidden')"/>`
+                ? `<img src="${place.photo}" alt="${primaryPlaceName(place)}" onerror="this.parentNode.classList.add('hidden')"/>`
                 : '';
             const portraitBadge = showPortrait
                 ? `<div class="photo-portrait-badge"><img src="${portraitUrl}" alt="Yi-Fu Tuan"/></div>`
@@ -2278,37 +2452,38 @@
         }
 
         function lifeStage(age) {
-            if (age === 0) return "初生";
-            if (age < 13) return "童年";
-            if (age < 20) return "少年";
-            if (age < 40) return "青年";
-            if (age < 60) return "盛年";
-            return "晚年";
+            if (age === 0) return localized("初生", "Birth");
+            if (age < 13) return localized("童年", "Childhood");
+            if (age < 20) return localized("少年", "Adolescence");
+            if (age < 40) return localized("青年", "Early Adulthood");
+            if (age < 60) return localized("盛年", "Midlife");
+            return localized("晚年", "Late Years");
         }
 
         function showStoryCard(place) {
             renderPhoto(place);
             document.getElementById("sc-year").textContent = place.year;
-            document.getElementById("sc-name").innerHTML = `${place.name}<span>${place.en}</span>`;
+            document.getElementById("sc-name").innerHTML = placeNameMarkup(place);
 
             const age = place.yearNum - 1930;
             const ageLine = age === 0
-                ? `<span class="age-stage">初生</span>出生于此`
-                : `<span class="age-stage">${lifeStage(age)}</span>那一年，他 ${age} 岁`;
+                ? `<span class="age-stage">${lifeStage(age)}</span>${localized("出生于此", "Born here")}`
+                : `<span class="age-stage">${lifeStage(age)}</span>${localized(`那一年，他 ${age} 岁`, `He was ${age} years old`)}`;
             document.getElementById("sc-age").innerHTML = ageLine;
 
-            document.getElementById("sc-event").textContent = place.event;
+            document.getElementById("sc-event").textContent = placeEvent(place);
 
             const ctx = placeContext[place.id] || {};
+            const contextEvents = localized(ctx.events, ctx.eventsEn) || ctx.events || [];
 
             const pubsEl = document.getElementById("sc-pubs");
             if (ctx.pubs && ctx.pubs.length) {
                 pubsEl.innerHTML = `
-                    <div class="story-pub-label">✦ 此间著作</div>
+                    <div class="story-pub-label">${uiText.pubLabel}</div>
                     ${ctx.pubs.map(p => `
                         <div class="story-pub">
                             <span class="story-pub-year">${p.year}</span>
-                            <span><em>${p.title}</em>${p.zh ? ` · ${p.zh}` : ''}</span>
+                            <span><em>${p.title}</em>${!isEnglish && p.zh ? ` · ${p.zh}` : ''}</span>
                         </div>`).join('')}`;
                 pubsEl.classList.remove("hidden");
             } else {
@@ -2316,18 +2491,18 @@
             }
 
             const ctxEl = document.getElementById("sc-context");
-            if (ctx.events && ctx.events.length) {
+            if (contextEvents.length) {
                 ctxEl.innerHTML = `
-                    <div class="story-context-label">同一年 · 世界正在发生</div>
+                    <div class="story-context-label">${uiText.contextLabel}</div>
                     <ul class="story-context-events">
-                        ${ctx.events.map(e => `<li>${e}</li>`).join('')}
+                        ${contextEvents.map(e => `<li>${e}</li>`).join('')}
                     </ul>`;
                 ctxEl.classList.remove("hidden");
             } else {
                 ctxEl.classList.add("hidden");
             }
 
-            document.getElementById("sc-quote").textContent = place.quote;
+            document.getElementById("sc-quote").textContent = placeQuote(place);
             // Re-trigger the staggered reveal animations even if card is already visible
             storyCard.classList.remove("visible");
             void storyCard.offsetWidth;
@@ -2342,9 +2517,9 @@
             document.getElementById("year-big").textContent = year;
             const age = year - 1930;
             const stage = lifeStage(age);
-            const right = isFlying ? "漂泊中" : "驻足";
+            const right = isFlying ? uiText.inTransit : uiText.settled;
             document.getElementById("year-age").textContent =
-                age === 0 ? "· 初生 ·" : `${stage} · ${age} 岁 · ${right}`;
+                age === 0 ? localized("· 初生 ·", "· Birth ·") : localized(`${stage} · ${age} 岁 · ${right}`, `${stage} · Age ${age} · ${right}`);
             moveNeedle(year);
             applyEraVisuals(year);
         }
@@ -2388,7 +2563,7 @@
                 div.style.background = e.color;
                 const lbl = document.createElement("span");
                 lbl.className = "era-label";
-                lbl.textContent = e.label;
+                lbl.textContent = localized(e.label, e.labelEn);
                 div.appendChild(lbl);
                 bands.appendChild(div);
             });
@@ -2398,7 +2573,7 @@
                 const dot = document.createElement("div");
                 dot.className = "milestone";
                 dot.style.left = ((m.year - YEAR_START) / YEAR_SPAN * 100) + "%";
-                dot.setAttribute("data-label", `${m.year} · ${m.label}`);
+                dot.setAttribute("data-label", `${m.year} · ${localized(m.label, m.labelEn)}`);
                 ms.appendChild(dot);
             });
         }
@@ -2412,7 +2587,7 @@
         const tooltip = document.getElementById("tooltip");
         function showHoverTip(event, place) {
             document.getElementById("tt-year").textContent = place.year;
-            document.getElementById("tt-city").innerHTML = `${place.name} · <span style="color:#8a7a60;font-style:italic;">${place.en}</span>`;
+            document.getElementById("tt-city").innerHTML = `${primaryPlaceName(place)} · <span style="color:#8a7a60;font-style:italic;">${secondaryPlaceName(place)}</span>`;
             tooltip.classList.add("visible");
             const margin = 14, tw = 260, th = 70;
             let tx = event.clientX + 18;
@@ -2640,7 +2815,7 @@
                         hideHoverTip();
                     })
                     .on("click", () => jumpTo(i));
-                grp.append("text").attr("class", "city-label unvisited").attr("x", 10).attr("y", 4).text(place.name);
+                grp.append("text").attr("class", "city-label unvisited").attr("x", 10).attr("y", 4).text(primaryPlaceName(place));
                 cityGroups.push(grp);
                 function animatePulse() {
                     pulse.attr("r", 4).attr("opacity", 0.6)
