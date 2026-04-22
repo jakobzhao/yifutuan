@@ -2027,30 +2027,18 @@
         }
 
         function updateCityPositions() {
-            const currentZoom = projection.scale();
-            const isHighZoom = currentZoom > 380; // High zoom threshold
-
             cityGroups.forEach((grp, i) => {
                 const p = places[i];
 
+                // Only show the current city during playback to avoid label overlap
+                // (e.g., multiple Madison periods don't overlap on the map)
+                if (isPlaying && i !== currentIdx) {
+                    grp.style("display", "none");
+                    return;
+                }
+
                 if (isVisible(p.coords)) {
                     const [x, y] = projection(p.coords);
-
-                    // At high zoom, hide labels that are far from center (to avoid overlap)
-                    // but keep normal display at normal zoom levels
-                    if (isHighZoom) {
-                        const centerX = width / 2;
-                        const centerY = height / 2;
-                        const distFromCenter = Math.sqrt(
-                            Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2)
-                        );
-                        // Hide if far from center at high zoom
-                        if (distFromCenter > 250) {
-                            grp.style("display", "none");
-                            return;
-                        }
-                    }
-
                     grp.attr("transform", `translate(${x},${y})`).style("display", null);
                 } else {
                     grp.style("display", "none");
