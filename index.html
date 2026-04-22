@@ -2039,7 +2039,16 @@
                 const p = places[i];
                 if (isVisible(p.coords)) {
                     const [x, y] = projection(p.coords);
-                    grp.attr("transform", `translate(${x},${y})`).style("display", null);
+                    // Also check if the projected point is within the screen bounds
+                    const margin = 100; // margin around screen edge
+                    const inScreenBounds = x >= -margin && x <= width + margin &&
+                                         y >= -margin && y <= height + margin;
+
+                    if (inScreenBounds) {
+                        grp.attr("transform", `translate(${x},${y})`).style("display", null);
+                    } else {
+                        grp.style("display", "none");
+                    }
                 } else {
                     grp.style("display", "none");
                 }
