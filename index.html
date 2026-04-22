@@ -2033,24 +2033,15 @@
             cityGroups.forEach((grp, i) => {
                 const p = places[i];
 
-                // At high zoom, only show the current city or nearby cities
-                if (isHighZoom && Math.abs(i - currentIdx) > 1) {
+                // At high zoom, only show the current city (latest one)
+                if (isHighZoom && i !== currentIdx) {
                     grp.style("display", "none");
                     return;
                 }
 
                 if (isVisible(p.coords)) {
                     const [x, y] = projection(p.coords);
-                    // Check if the projected point is within screen bounds
-                    const margin = 150; // margin around screen edge
-                    const inScreenBounds = x >= -margin && x <= width + margin &&
-                                         y >= -margin && y <= height + margin;
-
-                    if (inScreenBounds) {
-                        grp.attr("transform", `translate(${x},${y})`).style("display", null);
-                    } else {
-                        grp.style("display", "none");
-                    }
+                    grp.attr("transform", `translate(${x},${y})`).style("display", null);
                 } else {
                     grp.style("display", "none");
                 }
